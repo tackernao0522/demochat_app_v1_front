@@ -18,7 +18,7 @@ const { $axios } = useNuxtApp()
 
 const getMsg = async () => {
   try {
-    const res = await $axios.get('/api/v1/hello') // 修正: $axios ではなく axios を使用
+    const res = await $axios.get('/api/v1/hello')
     msgs.value.push(res.data)
   } catch (error) {
     console.error(error)

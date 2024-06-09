@@ -2,6 +2,10 @@ import axios from "axios";
 import { defineNuxtPlugin } from "#app";
 
 export default defineNuxtPlugin(({ provide }) => {
+  const api = axios.create({
+    baseURL: "http://localhost:3000",
+  });
+
   // リクエストログ
   axios.interceptors.request.use((config) => {
     console.log(config);
@@ -22,5 +26,5 @@ export default defineNuxtPlugin(({ provide }) => {
   );
 
   // axiosをnuxtアプリケーションに注入
-  provide("axios", axios);
+  provide("axios", api);
 });
