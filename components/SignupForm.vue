@@ -31,6 +31,19 @@ const errorMessage = ref('')
 const { $axios } = useNuxtApp()
 
 const signup = async () => {
+    errorMessage.value = ''
+    successMessage.value = ''
+
+    if (!name.value || !email.value || !password.value) {
+        errorMessage.value = '名前、メールアドレス、パスワードを入力してください。'
+        return
+    }
+
+    if (password.value !== passwordConfirmation.value) {
+        errorMessage.value = 'パスワードと確認用パスワードが一致しません。'
+        return
+    }
+
     try {
         const response = await $axios.post('/auth', {
             name: name.value,
@@ -46,8 +59,11 @@ const signup = async () => {
         password.value = ''
         passwordConfirmation.value = ''
     } catch (error) {
-        successMessage.value = ''
-        errorMessage.value = 'アカウントを登録できませんでした。'
+        if (error.response && error.response.data && error.response.data.errors) {
+            errorMessage.value = 'アカウントを登録できませんでした。'
+        } else {
+            errorMessage.value = 'アカウントを登録できませんでした。'
+        }
         console.error('Signup failed:', error)
     }
 }

@@ -33,6 +33,12 @@ const { $axios } = useNuxtApp()
 const login = async () => {
     errorMessage.value = ''
     successMessage.value = ''
+
+    if (!email.value || !password.value) {
+        errorMessage.value = 'メールアドレスとパスワードを入力してください。'
+        return
+    }
+
     try {
         const response = await $axios.post('/auth/sign_in', {
             email: email.value,
