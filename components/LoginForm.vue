@@ -1,28 +1,24 @@
 <template>
-    <div class="w-full sm:w-2/3 lg:w-1/2 xl:w-1/3 mx-auto text-center">
-        <h2 class="text-xl font-bold mb-4">ログイン</h2>
-        <form @submit.prevent="login" class="space-y-4">
+    <div class="form-container">
+        <h2 class="form-title">ログイン</h2>
+        <form @submit.prevent="login" class="form-layout">
             <FormField type="email" placeholder="メールアドレス" v-model="email" />
             <FormField type="password" placeholder="パスワード" v-model="password" />
-            <button
-                class="bg-bodyBg text-white font-bold border-0 rounded px-5 py-2 cursor-pointer hover:bg-opacity-90 transition">
+            <button class="btn-primary">
                 ログインする
             </button>
         </form>
-        <div v-if="errorMessage" class="mt-4 text-red-500">
-            {{ errorMessage }}
-        </div>
-        <div v-if="successMessage" class="mt-4 text-green-500">
-            {{ successMessage }}
-        </div>
+        <MessageDisplay :message="errorMessage" :isError="true" />
+        <MessageDisplay :message="successMessage" :isError="false" />
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useNuxtApp } from '#app'
-import { useRedirect } from '../composables/useRedirect.ts'
+import { useRedirect } from '../composables/useRedirect'
 import FormField from './FormField.vue'
+import MessageDisplay from './MessageDisplay.vue'
 
 const email = ref('')
 const password = ref('')
