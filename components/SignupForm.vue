@@ -19,6 +19,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useNuxtApp } from '#app'
+import { useRedirect } from '../composables/useRedirect.ts'
 import FormField from './FormField.vue'
 
 const name = ref('')
@@ -29,6 +30,7 @@ const successMessage = ref('')
 const errorMessage = ref('')
 
 const { $axios } = useNuxtApp()
+const { redirectToChatroom } = useRedirect()
 
 const signup = async () => {
     errorMessage.value = ''
@@ -58,6 +60,7 @@ const signup = async () => {
         email.value = ''
         password.value = ''
         passwordConfirmation.value = ''
+        redirectToChatroom()
     } catch (error) {
         if (error.response && error.response.data && error.response.data.errors) {
             errorMessage.value = 'アカウントを登録できませんでした。'

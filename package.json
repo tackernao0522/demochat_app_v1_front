@@ -8,7 +8,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "test": "vitest run",
+    "test": "NODE_ENV=test nuxt prepare && vitest run",
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {

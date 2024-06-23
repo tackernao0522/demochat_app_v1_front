@@ -1,28 +1,22 @@
 import { mount } from "@vue/test-utils";
-import { describe, it, expect, vi, beforeAll } from "vitest";
-import { setup } from "@nuxt/test-utils";
+import { describe, it, expect, vi } from "vitest";
 import SignupForm from "../../components/SignupForm.vue";
 import FormField from "../../components/FormField.vue";
 
-const mockAxios = {
-  post: vi.fn(),
+const mockRouter = {
+  push: vi.fn(),
 };
 
 vi.mock("#app", () => ({
   useNuxtApp: () => ({
-    $axios: mockAxios,
+    $axios: {
+      post: vi.fn(),
+    },
   }),
+  useRouter: () => mockRouter,
 }));
 
 describe("SignupForm", () => {
-  beforeAll(async () => {
-    await setup({
-      // Nuxtの設定をここに記述（必要に応じて）
-      // 例: rootDir: '.',
-      // server: true,
-    });
-  });
-
   it("フォームが正しくレンダリングされる", () => {
     const wrapper = mount(SignupForm);
     expect(wrapper.find("h2").text()).toBe("アカウントを登録");
@@ -44,6 +38,7 @@ describe("SignupForm", () => {
       .find('input[placeholder="パスワード(確認用)"]')
       .setValue("password123");
 
+    const mockAxios = wrapper.vm.$axios;
     mockAxios.post.mockResolvedValueOnce({
       data: { message: "Signup successful" },
     });
@@ -61,6 +56,9 @@ describe("SignupForm", () => {
     expect(wrapper.find(".text-green-500").text()).toBe(
       "アカウントが登録されました。"
     );
+
+    // 新たに追加したリダイレクトの確認
+    expect(mockRouter.push).toHaveBeenCalledWith("/Chatroom");
   });
 
   it("サインアップエラーを処理する", async () => {
@@ -77,6 +75,7 @@ describe("SignupForm", () => {
       .find('input[placeholder="パスワード(確認用)"]')
       .setValue("password123");
 
+    const mockAxios = wrapper.vm.$axios;
     mockAxios.post.mockRejectedValueOnce({
       response: { data: { errors: ["Email already taken"] } },
     });
@@ -136,6 +135,7 @@ describe("SignupForm", () => {
       .find('input[placeholder="パスワード(確認用)"]')
       .setValue("password123");
 
+    const mockAxios = wrapper.vm.$axios;
     mockAxios.post.mockRejectedValueOnce(new Error("Network Error"));
 
     await wrapper.find("form").trigger("submit");
@@ -144,5 +144,66 @@ describe("SignupForm", () => {
     expect(wrapper.find(".text-red-500").text()).toBe(
       "アカウントを登録できませんでした。"
     );
+  });
+
+  it("サインアップ成功時に成功メッセージが表示される", async () => {
+    const wrapper = mount(SignupForm);
+
+    await wrapper.find('input[placeholder="名前"]').setValue("John Doe");
+    await wrapper
+      .find('input[placeholder="メールアドレス"]')
+      .setValue("john@example.com");
+    await wrapper
+      .find('input[placeholder="パスワード"]')
+      .setValue("password123");
+    await wrapper
+      .find('input[placeholder="パスワード(確認用)"]')
+      .setValue("password123");
+
+    const mockAxios = wrapper.vm.$axios;
+    mockAxios.post.mockResolvedValueOnce({
+      data: { message: "Signup successful" },
+    });
+
+    await wrapper.find("form").trigger("submit");
+
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find(".text-green-500").text()).toBe(
+      "アカウントが登録されました。"
+    );
+  });
+
+  it("フォーム送信後、入力フィールドがリセットされる", async () => {
+    const wrapper = mount(SignupForm);
+
+    await wrapper.find('input[placeholder="名前"]').setValue("John Doe");
+    await wrapper
+      .find('input[placeholder="メールアドレス"]')
+      .setValue("john@example.com");
+    await wrapper
+      .find('input[placeholder="パスワード"]')
+      .setValue("password123");
+    await wrapper
+      .find('input[placeholder="パスワード(確認用)"]')
+      .setValue("password123");
+
+    const mockAxios = wrapper.vm.$axios;
+    mockAxios.post.mockResolvedValueOnce({
+      data: { message: "Signup successful" },
+    });
+
+    await wrapper.find("form").trigger("submit");
+
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('input[placeholder="名前"]').element.value).toBe("");
+    expect(
+      wrapper.find('input[placeholder="メールアドレス"]').element.value
+    ).toBe("");
+    expect(wrapper.find('input[placeholder="パスワード"]').element.value).toBe(
+      ""
+    );
+    expect(
+      wrapper.find('input[placeholder="パスワード(確認用)"]').element.value
+    ).toBe("");
   });
 });

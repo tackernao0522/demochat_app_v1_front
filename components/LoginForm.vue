@@ -21,6 +21,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useNuxtApp } from '#app'
+import { useRedirect } from '../composables/useRedirect.ts'
 import FormField from './FormField.vue'
 
 const email = ref('')
@@ -29,6 +30,7 @@ const errorMessage = ref('')
 const successMessage = ref('')
 
 const { $axios } = useNuxtApp()
+const { redirectToChatroom } = useRedirect()
 
 const login = async () => {
     errorMessage.value = ''
@@ -46,6 +48,9 @@ const login = async () => {
         })
         console.log('Login successful:', response.data)
         successMessage.value = 'ログインに成功しました！'
+        email.value = ''
+        password.value = ''
+        redirectToChatroom()
     } catch (error) {
         if (error.response && error.response.data && error.response.data.errors) {
             errorMessage.value = error.response.data.errors.join(', ')
