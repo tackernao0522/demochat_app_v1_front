@@ -7,15 +7,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "happy-dom",
-    silent: false, // 詳細なログを表示
     deps: {
-      optimizer: {
-        web: {
-          include: ["@nuxt/test-utils-edge"],
-        },
-      },
+      inline: ["@nuxt/test-utils-edge"],
     },
-    reporters: ["default", "verbose"], // 詳細なログを表示
   },
   resolve: {
     alias: {

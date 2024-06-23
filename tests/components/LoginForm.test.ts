@@ -1,28 +1,22 @@
 import { mount } from "@vue/test-utils";
-import { describe, it, expect, vi, beforeAll } from "vitest";
-import { setup } from "@nuxt/test-utils";
+import { describe, it, expect, vi } from "vitest";
 import LoginForm from "../../components/LoginForm.vue";
 import FormField from "../../components/FormField.vue";
 
-const mockAxios = {
-  post: vi.fn(),
+const mockRouter = {
+  push: vi.fn(),
 };
 
 vi.mock("#app", () => ({
   useNuxtApp: () => ({
-    $axios: mockAxios,
+    $axios: {
+      post: vi.fn(),
+    },
   }),
+  useRouter: () => mockRouter,
 }));
 
 describe("LoginForm", () => {
-  beforeAll(async () => {
-    await setup({
-      // テスト用のNuxt設定をここに記述
-      // 例: rootDir: '.',
-      // server: true,
-    });
-  });
-
   it("フォームが正しくレンダリングされる", () => {
     const wrapper = mount(LoginForm);
     expect(wrapper.find("h2").text()).toBe("ログイン");
@@ -36,6 +30,7 @@ describe("LoginForm", () => {
     await wrapper.find('input[type="email"]').setValue("test@example.com");
     await wrapper.find('input[type="password"]').setValue("password123");
 
+    const mockAxios = wrapper.vm.$axios;
     mockAxios.post.mockResolvedValueOnce({
       data: { message: "Login successful" },
     });
@@ -51,6 +46,9 @@ describe("LoginForm", () => {
     expect(wrapper.find(".text-green-500").text()).toBe(
       "ログインに成功しました！"
     );
+
+    // 新たに追加したリダイレクトの確認
+    expect(mockRouter.push).toHaveBeenCalledWith("/Chatroom");
   });
 
   it("ログインエラーを処理する", async () => {
@@ -59,6 +57,7 @@ describe("LoginForm", () => {
     await wrapper.find('input[type="email"]').setValue("test@example.com");
     await wrapper.find('input[type="password"]').setValue("password123");
 
+    const mockAxios = wrapper.vm.$axios;
     mockAxios.post.mockRejectedValueOnce({
       response: { data: { errors: ["Invalid credentials"] } },
     });
@@ -86,6 +85,7 @@ describe("LoginForm", () => {
     await wrapper.find('input[type="email"]').setValue("test@example.com");
     await wrapper.find('input[type="password"]').setValue("password123");
 
+    const mockAxios = wrapper.vm.$axios;
     mockAxios.post.mockRejectedValueOnce(new Error("Network Error"));
 
     await wrapper.find("form").trigger("submit");
@@ -94,5 +94,43 @@ describe("LoginForm", () => {
     expect(wrapper.find(".text-red-500").text()).toBe(
       "ログイン中にエラーが発生しました。"
     );
+  });
+
+  // 新たなテストケースの追加
+  it("ログイン成功時に成功メッセージが表示される", async () => {
+    const wrapper = mount(LoginForm);
+
+    await wrapper.find('input[type="email"]').setValue("test@example.com");
+    await wrapper.find('input[type="password"]').setValue("password123");
+
+    const mockAxios = wrapper.vm.$axios;
+    mockAxios.post.mockResolvedValueOnce({
+      data: { message: "Login successful" },
+    });
+
+    await wrapper.find("form").trigger("submit");
+
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find(".text-green-500").text()).toBe(
+      "ログインに成功しました！"
+    );
+  });
+
+  it("フォーム送信後、入力フィールドがリセットされる", async () => {
+    const wrapper = mount(LoginForm);
+
+    await wrapper.find('input[type="email"]').setValue("test@example.com");
+    await wrapper.find('input[type="password"]').setValue("password123");
+
+    const mockAxios = wrapper.vm.$axios;
+    mockAxios.post.mockResolvedValueOnce({
+      data: { message: "Login successful" },
+    });
+
+    await wrapper.find("form").trigger("submit");
+
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('input[type="email"]').element.value).toBe("");
+    expect(wrapper.find('input[type="password"]').element.value).toBe("");
   });
 });
