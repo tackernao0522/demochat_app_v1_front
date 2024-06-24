@@ -1,3 +1,4 @@
+// components/SignupForm.vue
 <template>
     <div class="form-container">
         <h2 class="form-title">アカウントを登録</h2>
@@ -19,6 +20,7 @@
 import { ref } from 'vue'
 import { useNuxtApp } from '#app'
 import { useRedirect } from '../composables/useRedirect'
+import { useLocalStorage } from '../composables/useLocalStorage'
 import FormField from './FormField.vue'
 import MessageDisplay from './MessageDisplay.vue'
 
@@ -31,6 +33,7 @@ const errorMessage = ref('')
 
 const { $axios } = useNuxtApp()
 const { redirectToChatroom } = useRedirect()
+const { saveAuthData } = useLocalStorage()
 
 const signup = async () => {
     errorMessage.value = ''
@@ -53,9 +56,11 @@ const signup = async () => {
             password: password.value,
             password_confirmation: passwordConfirmation.value
         })
+
+        saveAuthData(response.headers, response.data.data)
+
         successMessage.value = 'アカウントが登録されました。'
         errorMessage.value = ''
-        console.log(response.data)
         name.value = ''
         email.value = ''
         password.value = ''
