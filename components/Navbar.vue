@@ -11,14 +11,18 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps({
-    username: String,
-    userEmail: String
+import { ref, onMounted } from 'vue'
+
+const username = ref('')
+const userEmail = ref('')
+
+onMounted(() => {
+    username.value = localStorage.getItem('name') || 'ゲスト'
+    userEmail.value = localStorage.getItem('uid') || '不明なメールアドレス'
 })
 
-const emit = defineEmits(['logout'])
-
 const logout = () => {
-    emit('logout')
+    localStorage.clear()
+    // ログアウト処理を追加
 }
 </script>

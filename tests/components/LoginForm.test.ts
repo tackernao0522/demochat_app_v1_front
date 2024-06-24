@@ -1,5 +1,5 @@
 import { mount } from "@vue/test-utils";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import LoginForm from "../../components/LoginForm.vue";
 import FormField from "../../components/FormField.vue";
 
@@ -16,7 +16,32 @@ vi.mock("#app", () => ({
   useRouter: () => mockRouter,
 }));
 
+// localStorageのモック
+const localStorageMock = (() => {
+  let store: { [key: string]: string } = {};
+
+  return {
+    getItem: (key: string) => store[key] || null,
+    setItem: (key: string, value: string) => {
+      store[key] = value.toString();
+    },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
+    clear: () => {
+      store = {};
+    },
+  };
+})();
+
+Object.defineProperty(window, "localStorage", { value: localStorageMock });
+
 describe("LoginForm", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+  });
+
   it("フォームが正しくレンダリングされる", () => {
     const wrapper = mount(LoginForm);
     expect(wrapper.find("h2").text()).toBe("ログイン");
@@ -32,7 +57,12 @@ describe("LoginForm", () => {
 
     const mockAxios = wrapper.vm.$axios;
     mockAxios.post.mockResolvedValueOnce({
-      data: { message: "Login successful" },
+      data: { data: { name: "Test User" } },
+      headers: {
+        "access-token": "token123",
+        client: "client123",
+        uid: "uid123",
+      },
     });
 
     await wrapper.find("form").trigger("submit");
@@ -46,6 +76,12 @@ describe("LoginForm", () => {
     expect(wrapper.find(".text-green-500").text()).toBe(
       "ログインに成功しました！"
     );
+
+    // 新たに追加したlocalStorageの確認
+    expect(localStorage.getItem("access-token")).toBe("token123");
+    expect(localStorage.getItem("client")).toBe("client123");
+    expect(localStorage.getItem("uid")).toBe("uid123");
+    expect(localStorage.getItem("name")).toBe("Test User");
 
     // 新たに追加したリダイレクトの確認
     expect(mockRouter.push).toHaveBeenCalledWith("/Chatroom");
@@ -96,8 +132,7 @@ describe("LoginForm", () => {
     );
   });
 
-  // 新たなテストケースの追加
-  it("ログイン成功時に成功メッセージが表示される", async () => {
+  it("ログイン成功時にlocalStorageに値を保存する", async () => {
     const wrapper = mount(LoginForm);
 
     await wrapper.find('input[type="email"]').setValue("test@example.com");
@@ -105,15 +140,23 @@ describe("LoginForm", () => {
 
     const mockAxios = wrapper.vm.$axios;
     mockAxios.post.mockResolvedValueOnce({
-      data: { message: "Login successful" },
+      data: { data: { name: "Test User" } },
+      headers: {
+        "access-token": "token123",
+        client: "client123",
+        uid: "uid123",
+      },
     });
 
     await wrapper.find("form").trigger("submit");
 
     await wrapper.vm.$nextTick();
-    expect(wrapper.find(".text-green-500").text()).toBe(
-      "ログインに成功しました！"
-    );
+
+    // localStorageに値が保存されたことを確認
+    expect(localStorage.getItem("access-token")).toBe("token123");
+    expect(localStorage.getItem("client")).toBe("client123");
+    expect(localStorage.getItem("uid")).toBe("uid123");
+    expect(localStorage.getItem("name")).toBe("Test User");
   });
 
   it("フォーム送信後、入力フィールドがリセットされる", async () => {
@@ -124,7 +167,12 @@ describe("LoginForm", () => {
 
     const mockAxios = wrapper.vm.$axios;
     mockAxios.post.mockResolvedValueOnce({
-      data: { message: "Login successful" },
+      data: { data: { name: "Test User" } },
+      headers: {
+        "access-token": "token123",
+        client: "client123",
+        uid: "uid123",
+      },
     });
 
     await wrapper.find("form").trigger("submit");

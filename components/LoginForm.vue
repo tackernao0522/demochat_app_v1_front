@@ -1,3 +1,4 @@
+// components/LoginForm.vue
 <template>
     <div class="form-container">
         <h2 class="form-title">ログイン</h2>
@@ -17,6 +18,7 @@
 import { ref } from 'vue'
 import { useNuxtApp } from '#app'
 import { useRedirect } from '../composables/useRedirect'
+import { useLocalStorage } from '../composables/useLocalStorage'
 import FormField from './FormField.vue'
 import MessageDisplay from './MessageDisplay.vue'
 
@@ -27,6 +29,7 @@ const successMessage = ref('')
 
 const { $axios } = useNuxtApp()
 const { redirectToChatroom } = useRedirect()
+const { saveAuthData } = useLocalStorage()
 
 const login = async () => {
     errorMessage.value = ''
@@ -42,7 +45,8 @@ const login = async () => {
             email: email.value,
             password: password.value
         })
-        console.log('Login successful:', response.data)
+        saveAuthData(response.headers, response.data.data)
+
         successMessage.value = 'ログインに成功しました！'
         email.value = ''
         password.value = ''
@@ -53,7 +57,7 @@ const login = async () => {
         } else {
             errorMessage.value = 'ログイン中にエラーが発生しました。'
         }
-        console.error('メールアドレスかパスワードが違います。')
+        console.error('ログインエラー:', error)
     }
 }
 </script>
