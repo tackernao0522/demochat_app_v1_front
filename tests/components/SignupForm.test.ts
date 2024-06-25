@@ -94,7 +94,7 @@ describe("SignupForm", () => {
     expect(localStorage.getItem("name")).toBe("John Doe");
 
     // リダイレクトの確認
-    expect(mockRouter.push).toHaveBeenCalledWith("/Chatroom");
+    expect(mockRouter.push).toHaveBeenCalledWith("/chatroom");
   });
 
   it("サインアップエラーを処理する", async () => {
