@@ -84,7 +84,7 @@ describe("LoginForm", () => {
     expect(localStorage.getItem("name")).toBe("Test User");
 
     // 新たに追加したリダイレクトの確認
-    expect(mockRouter.push).toHaveBeenCalledWith("/Chatroom");
+    expect(mockRouter.push).toHaveBeenCalledWith("/chatroom");
   });
 
   it("ログインエラーを処理する", async () => {

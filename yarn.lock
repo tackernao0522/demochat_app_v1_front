@@ -6512,9 +6512,9 @@ system-architecture@^0.1.0:
   integrity sha512-ulAk51I9UVUyJgxlv9M6lFot2WP3e7t8Kz9+IS6D4rVba1tR9kON+Ey69f+1R4Q8cd45Lod6a4IcJIxnzGc/zA==
 
 tailwind-config-viewer@^2.0.1:
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/tailwind-config-viewer/-/tailwind-config-viewer-2.0.3.tgz#7001a6d4bd703b2ffad2645ca47c34f2654f4c3d"
-  integrity sha512-UxeBz6Q0XLCmVcJ2IiYqM1vuxjIkGTf0idxpwb7LkCb/FEebEmUGqwE7XSGPrD8uL7bmCfWskyPGiwNtzMmrJw==
+  version "2.0.4"
+  resolved "https://registry.yarnpkg.com/tailwind-config-viewer/-/tailwind-config-viewer-2.0.4.tgz#5f47ef0f0ba3719557f88628de8bf276cad7a4cb"
+  integrity sha512-icvcmdMmt9dphvas8wL40qttrHwAnW3QEN4ExJ2zICjwRsPj7gowd1cOceaWG3IfTuM/cTNGQcx+bsjMtmV+cw==
   dependencies:
     "@koa/router" "^12.0.1"
     commander "^6.0.0"

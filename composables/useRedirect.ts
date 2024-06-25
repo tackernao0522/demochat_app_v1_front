@@ -4,7 +4,7 @@ export const useRedirect = () => {
   const router = useRouter();
 
   const redirectToChatroom = () => {
-    router.push("/Chatroom");
+    router.push("/chatroom");
   };
 
   return {
