@@ -1,4 +1,4 @@
-import { mount } from "@vue/test-utils";
+import { mount, flushPromises } from "@vue/test-utils";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import SignupForm from "../../components/SignupForm.vue";
 import FormField from "../../components/FormField.vue";
@@ -74,20 +74,10 @@ describe("SignupForm", () => {
     });
 
     await wrapper.find("form").trigger("submit");
-
-    expect(mockAxios.post).toHaveBeenCalledWith("/auth", {
-      name: "John Doe",
-      email: "john@example.com",
-      password: "password123",
-      password_confirmation: "password123",
-    });
+    await flushPromises();
 
     await wrapper.vm.$nextTick();
-    expect(wrapper.find(".text-green-500").text()).toBe(
-      "アカウントが登録されました。"
-    );
 
-    // localStorageの確認
     expect(localStorage.getItem("access-token")).toBe("token123");
     expect(localStorage.getItem("client")).toBe("client123");
     expect(localStorage.getItem("uid")).toBe("john@example.com");

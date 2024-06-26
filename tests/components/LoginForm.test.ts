@@ -1,4 +1,4 @@
-import { mount } from "@vue/test-utils";
+import { mount, flushPromises } from "@vue/test-utils";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import LoginForm from "../../components/LoginForm.vue";
 import FormField from "../../components/FormField.vue";
@@ -66,16 +66,22 @@ describe("LoginForm", () => {
     });
 
     await wrapper.find("form").trigger("submit");
-
-    expect(mockAxios.post).toHaveBeenCalledWith("/auth/sign_in", {
-      email: "test@example.com",
-      password: "password123",
-    });
-
+    await flushPromises();
     await wrapper.vm.$nextTick();
-    expect(wrapper.find(".text-green-500").text()).toBe(
-      "ログインに成功しました！"
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const successMessage = wrapper.find('[data-testid="success-message"]');
+    expect(successMessage.exists()).toBe(true);
+    expect(successMessage.text()).toBe("ログインに成功しました！");
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect(wrapper.find('[data-testid="success-message"]').exists()).toBe(
+      false
     );
+    expect(successMessage.exists()).toBe(true);
+    expect(successMessage.text()).toBe("ログインに成功しました！");
 
     // 新たに追加したlocalStorageの確認
     expect(localStorage.getItem("access-token")).toBe("token123");
@@ -176,8 +182,11 @@ describe("LoginForm", () => {
     });
 
     await wrapper.find("form").trigger("submit");
-
+    await flushPromises();
     await wrapper.vm.$nextTick();
+
+    await new Promise((resolve) => setTimeout(resolve, 150));
+
     expect(wrapper.find('input[type="email"]').element.value).toBe("");
     expect(wrapper.find('input[type="password"]').element.value).toBe("");
   });

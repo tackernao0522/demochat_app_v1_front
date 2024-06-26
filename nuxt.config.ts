@@ -5,4 +5,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   plugins: ["~/plugins/axios.ts"],
   modules: ["@nuxtjs/tailwindcss"],
+  build: {
+    transpile: ["@nuxtjs/tailwindcss"],
+  },
 });
