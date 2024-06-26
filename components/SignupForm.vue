@@ -1,4 +1,3 @@
-// components/SignupForm.vue
 <template>
     <div class="form-container">
         <h2 class="form-title">アカウントを登録</h2>
@@ -59,7 +58,8 @@ const signup = async () => {
 
         saveAuthData(response.headers, response.data.data)
 
-        successMessage.value = 'アカウントが登録されました。'
+        // メッセージをクリア
+        successMessage.value = ''
         errorMessage.value = ''
         name.value = ''
         email.value = ''

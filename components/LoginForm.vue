@@ -1,4 +1,3 @@
-// components/LoginForm.vue
 <template>
     <div class="form-container">
         <h2 class="form-title">ログイン</h2>
@@ -10,7 +9,7 @@
             </button>
         </form>
         <MessageDisplay :message="errorMessage" :isError="true" />
-        <MessageDisplay :message="successMessage" :isError="false" />
+        <MessageDisplay :message="successMessage" :isError="false" data-testid="success-message" />
     </div>
 </template>
 
@@ -48,9 +47,15 @@ const login = async () => {
         saveAuthData(response.headers, response.data.data)
 
         successMessage.value = 'ログインに成功しました！'
-        email.value = ''
-        password.value = ''
-        redirectToChatroom()
+
+        // メッセージをクリア
+        setTimeout(() => {
+            errorMessage.value = ''
+            successMessage.value = ''
+            email.value = ''
+            password.value = ''
+            redirectToChatroom()
+        }, 150)
     } catch (error) {
         if (error.response && error.response.data && error.response.data.errors) {
             errorMessage.value = error.response.data.errors.join(', ')

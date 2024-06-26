@@ -9,7 +9,9 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "test": "NODE_ENV=test nuxt prepare && vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "NODE_ENV=test nuxt prepare && vitest run --coverage --coverage-dir ./coverage",
+    "test:watch": "NODE_ENV=test nuxt prepare && vitest watch",
+    "test:verbose": "NODE_ENV=test nuxt prepare && vitest run --reporter=verbose"
   },
   "dependencies": {
     "axios": "^1.7.2",
@@ -19,11 +21,13 @@
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
   "devDependencies": {
+    "@testing-library/vue": "^6.6.1",
+    "@vitest/coverage-c8": "^0.33.0",
     "@nuxt/test-utils": "^3.13.1",
     "@nuxtjs/tailwindcss": "^6.12.0",
     "@vue/test-utils": "^2.4.6",
     "happy-dom": "^14.12.3",
-    "vitest": "^1.6.0",
+    "vitest": "^0.34.0",
     "eslint": "^8.0.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-vue": "^9.0.0",
