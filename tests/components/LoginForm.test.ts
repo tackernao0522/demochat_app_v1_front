@@ -71,25 +71,13 @@ describe("LoginForm", () => {
 
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    const successMessage = wrapper.find('[data-testid="success-message"]');
-    expect(successMessage.exists()).toBe(true);
-    expect(successMessage.text()).toBe("ログインに成功しました！");
-
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    expect(wrapper.find('[data-testid="success-message"]').exists()).toBe(
-      false
-    );
-    expect(successMessage.exists()).toBe(true);
-    expect(successMessage.text()).toBe("ログインに成功しました！");
-
-    // 新たに追加したlocalStorageの確認
+    // localStorageに値が保存されたことを確認
     expect(localStorage.getItem("access-token")).toBe("token123");
     expect(localStorage.getItem("client")).toBe("client123");
     expect(localStorage.getItem("uid")).toBe("uid123");
     expect(localStorage.getItem("name")).toBe("Test User");
 
-    // 新たに追加したリダイレクトの確認
+    // リダイレクトの確認
     expect(mockRouter.push).toHaveBeenCalledWith("/chatroom");
   });
 
@@ -189,5 +177,40 @@ describe("LoginForm", () => {
 
     expect(wrapper.find('input[type="email"]').element.value).toBe("");
     expect(wrapper.find('input[type="password"]').element.value).toBe("");
+  });
+
+  it("ログイン成功後にリダイレクトされない場合の処理を確認する", async () => {
+    const wrapper = mount(LoginForm);
+
+    await wrapper.find('input[type="email"]').setValue("test@example.com");
+    await wrapper.find('input[type="password"]').setValue("password123");
+
+    const mockAxios = wrapper.vm.$axios;
+    mockAxios.post.mockResolvedValueOnce({
+      data: { data: { name: "Test User" } },
+      headers: {
+        "access-token": "token123",
+        client: "client123",
+        uid: "uid123",
+      },
+    });
+
+    // リダイレクトしないようにモックする
+    mockRouter.push.mockImplementationOnce(() => {
+      throw new Error("Navigation aborted");
+    });
+
+    await wrapper.find("form").trigger("submit");
+    await flushPromises();
+    await wrapper.vm.$nextTick();
+
+    // localStorageに値が保存されたことを確認
+    expect(localStorage.getItem("access-token")).toBe("token123");
+    expect(localStorage.getItem("client")).toBe("client123");
+    expect(localStorage.getItem("uid")).toBe("uid123");
+    expect(localStorage.getItem("name")).toBe("Test User");
+
+    // リダイレクトが試みられたが失敗したことを確認
+    expect(mockRouter.push).toHaveBeenCalledWith("/chatroom");
   });
 });

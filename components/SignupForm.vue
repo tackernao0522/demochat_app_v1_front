@@ -6,9 +6,7 @@
             <FormField type="email" placeholder="メールアドレス" v-model="email" />
             <FormField type="password" placeholder="パスワード" v-model="password" />
             <FormField type="password" placeholder="パスワード(確認用)" v-model="passwordConfirmation" />
-            <button class="btn-primary">
-                登録する
-            </button>
+            <button class="btn-primary">登録する</button>
         </form>
         <MessageDisplay :message="successMessage" :isError="false" />
         <MessageDisplay :message="errorMessage" :isError="true" />
@@ -34,19 +32,41 @@ const { $axios } = useNuxtApp()
 const { redirectToChatroom } = useRedirect()
 const { saveAuthData } = useLocalStorage()
 
-const signup = async () => {
-    errorMessage.value = ''
-    successMessage.value = ''
-
+const validateForm = () => {
     if (!name.value || !email.value || !password.value) {
         errorMessage.value = '名前、メールアドレス、パスワードを入力してください。'
-        return
+        return false
     }
 
     if (password.value !== passwordConfirmation.value) {
         errorMessage.value = 'パスワードと確認用パスワードが一致しません。'
-        return
+        return false
     }
+
+    return true
+}
+
+const handleSignupError = (error: any) => {
+    if (error.response && error.response.data && error.response.data.errors) {
+        errorMessage.value = error.response.data.errors.join(', ')
+    } else {
+        errorMessage.value = 'アカウントを登録できませんでした。'
+    }
+    console.error('Signup failed:', error)
+}
+
+const resetForm = () => {
+    name.value = ''
+    email.value = ''
+    password.value = ''
+    passwordConfirmation.value = ''
+}
+
+const signup = async () => {
+    errorMessage.value = ''
+    successMessage.value = ''
+
+    if (!validateForm()) return
 
     try {
         const response = await $axios.post('/auth', {
@@ -57,22 +77,10 @@ const signup = async () => {
         })
 
         saveAuthData(response.headers, response.data.data)
-
-        // メッセージをクリア
-        successMessage.value = ''
-        errorMessage.value = ''
-        name.value = ''
-        email.value = ''
-        password.value = ''
-        passwordConfirmation.value = ''
+        resetForm()
         redirectToChatroom()
     } catch (error) {
-        if (error.response && error.response.data && error.response.data.errors) {
-            errorMessage.value = 'アカウントを登録できませんでした。'
-        } else {
-            errorMessage.value = 'アカウントを登録できませんでした。'
-        }
-        console.error('Signup failed:', error)
+        handleSignupError(error)
     }
 }
 </script>

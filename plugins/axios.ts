@@ -7,13 +7,13 @@ export default defineNuxtPlugin(({ provide }) => {
   });
 
   // リクエストログ
-  axios.interceptors.request.use((config) => {
+  api.interceptors.request.use((config) => {
     console.log(config);
     return config;
   });
 
   // レスポンスログ
-  axios.interceptors.response.use(
+  api.interceptors.response.use(
     (response) => {
       console.log(response);
       return response;

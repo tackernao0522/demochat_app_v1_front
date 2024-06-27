@@ -1,5 +1,5 @@
 export const useLocalStorage = () => {
-  const saveAuthData = (headers: any, data: any) => {
+  const saveAuthData = (headers: AuthHeaders, data: AuthData) => {
     window.localStorage.setItem("access-token", headers["access-token"]);
     window.localStorage.setItem("client", headers.client);
     window.localStorage.setItem("uid", headers.uid);
@@ -14,5 +14,10 @@ export const useLocalStorage = () => {
     };
   };
 
-  return { saveAuthData, getAuthData };
+  const isAuthenticated = () => {
+    const { token, client, uid } = getAuthData();
+    return token && client && uid;
+  };
+
+  return { saveAuthData, getAuthData, isAuthenticated };
 };
