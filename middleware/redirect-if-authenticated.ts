@@ -9,11 +9,10 @@ export default defineNuxtRouteMiddleware(() => {
     return;
   }
 
-  const { getAuthData } = useLocalStorage();
-  const { token, client, uid } = getAuthData();
+  const { isAuthenticated } = useLocalStorage();
   const { redirectToChatroom } = useRedirect();
 
-  if (token && client && uid) {
+  if (isAuthenticated()) {
     console.log("既にログインしています。");
     redirectToChatroom();
   }

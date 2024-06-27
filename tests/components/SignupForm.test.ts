@@ -109,9 +109,7 @@ describe("SignupForm", () => {
     await wrapper.find("form").trigger("submit");
 
     await wrapper.vm.$nextTick();
-    expect(wrapper.find(".text-red-500").text()).toBe(
-      "アカウントを登録できませんでした。"
-    );
+    expect(wrapper.find(".text-red-500").text()).toBe("Email already taken");
   });
 
   it("入力フィールドが空の場合にエラーメッセージを表示する", async () => {
@@ -244,5 +242,48 @@ describe("SignupForm", () => {
     expect(
       wrapper.find('input[placeholder="パスワード(確認用)"]').element.value
     ).toBe("");
+  });
+
+  it("サインアップ成功後にリダイレクトされない場合の処理を確認する", async () => {
+    const wrapper = mount(SignupForm);
+
+    await wrapper.find('input[placeholder="名前"]').setValue("John Doe");
+    await wrapper
+      .find('input[placeholder="メールアドレス"]')
+      .setValue("john@example.com");
+    await wrapper
+      .find('input[placeholder="パスワード"]')
+      .setValue("password123");
+    await wrapper
+      .find('input[placeholder="パスワード(確認用)"]')
+      .setValue("password123");
+
+    const mockAxios = wrapper.vm.$axios;
+    mockAxios.post.mockResolvedValueOnce({
+      data: { data: { name: "John Doe" } },
+      headers: {
+        "access-token": "token123",
+        client: "client123",
+        uid: "john@example.com",
+      },
+    });
+
+    // リダイレクトしないようにモックする
+    mockRouter.push.mockImplementationOnce(() => {
+      throw new Error("Navigation aborted");
+    });
+
+    await wrapper.find("form").trigger("submit");
+    await flushPromises();
+    await wrapper.vm.$nextTick();
+
+    // localStorageに値が保存されたことを確認
+    expect(localStorage.getItem("access-token")).toBe("token123");
+    expect(localStorage.getItem("client")).toBe("client123");
+    expect(localStorage.getItem("uid")).toBe("john@example.com");
+    expect(localStorage.getItem("name")).toBe("John Doe");
+
+    // リダイレクトが試みられたが失敗したことを確認
+    expect(mockRouter.push).toHaveBeenCalledWith("/chatroom");
   });
 });

@@ -4,9 +4,7 @@
         <form @submit.prevent="login" class="form-layout">
             <FormField type="email" placeholder="メールアドレス" v-model="email" />
             <FormField type="password" placeholder="パスワード" v-model="password" />
-            <button class="btn-primary">
-                ログインする
-            </button>
+            <button class="btn-primary">ログインする</button>
         </form>
         <MessageDisplay :message="errorMessage" :isError="true" />
         <MessageDisplay :message="successMessage" :isError="false" data-testid="success-message" />
@@ -30,14 +28,33 @@ const { $axios } = useNuxtApp()
 const { redirectToChatroom } = useRedirect()
 const { saveAuthData } = useLocalStorage()
 
+const validateForm = () => {
+    if (!email.value || !password.value) {
+        errorMessage.value = 'メールアドレスとパスワードを入力してください。'
+        return false
+    }
+    return true
+}
+
+const handleLoginError = (error: any) => {
+    if (error.response && error.response.data && error.response.data.errors) {
+        errorMessage.value = error.response.data.errors.join(', ')
+    } else {
+        errorMessage.value = 'ログイン中にエラーが発生しました。'
+    }
+    console.error('ログインエラー:', error)
+}
+
+const resetForm = () => {
+    email.value = ''
+    password.value = ''
+}
+
 const login = async () => {
     errorMessage.value = ''
     successMessage.value = ''
 
-    if (!email.value || !password.value) {
-        errorMessage.value = 'メールアドレスとパスワードを入力してください。'
-        return
-    }
+    if (!validateForm()) return
 
     try {
         const response = await $axios.post('/auth/sign_in', {
@@ -45,24 +62,10 @@ const login = async () => {
             password: password.value
         })
         saveAuthData(response.headers, response.data.data)
-
-        successMessage.value = 'ログインに成功しました！'
-
-        // メッセージをクリア
-        setTimeout(() => {
-            errorMessage.value = ''
-            successMessage.value = ''
-            email.value = ''
-            password.value = ''
-            redirectToChatroom()
-        }, 150)
+        resetForm()
+        redirectToChatroom()
     } catch (error) {
-        if (error.response && error.response.data && error.response.data.errors) {
-            errorMessage.value = error.response.data.errors.join(', ')
-        } else {
-            errorMessage.value = 'ログイン中にエラーが発生しました。'
-        }
-        console.error('ログインエラー:', error)
+        handleLoginError(error)
     }
 }
 </script>
