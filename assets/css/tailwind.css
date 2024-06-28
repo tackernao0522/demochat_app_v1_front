@@ -1,3 +1,5 @@
+/* assets/css/tailwind.css */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -18,5 +20,41 @@ body {
   }
   .form-layout {
     @apply space-y-4;
+  }
+  .chat-window {
+    @apply flex flex-col h-full max-h-full border border-gray-300 rounded-lg shadow-lg;
+  }
+  .messages {
+    @apply flex-1 overflow-y-auto p-4 space-y-2;
+  }
+  .received .message-content-wrapper {
+    @apply bg-gray-200 p-2 rounded-3xl mb-1 max-w-full sm:max-w-md;
+  }
+  .sent .message-content-wrapper {
+    @apply bg-blue-600 text-white p-2 rounded-3xl mb-1 max-w-full sm:max-w-md;
+  }
+  .received {
+    @apply float-left clear-both w-full sm:w-auto;
+  }
+  .sent {
+    @apply float-right clear-both w-full sm:w-auto;
+  }
+  .name {
+    @apply block sm:inline relative mr-2 text-sm font-bold;
+  }
+  .created-at {
+    @apply text-gray-500 text-xs mt-1 block;
+  }
+  ul {
+    @apply list-none m-0 p-0;
+  }
+  ul li {
+    @apply inline-block clear-both mb-2 w-full;
+  }
+  .new-chat-form {
+    @apply mt-4 w-full px-2 sm:px-4 bg-white border border-gray-300 rounded-lg shadow-md;
+  }
+  .new-chat-textarea {
+    @apply w-full max-w-full mb-2 p-2 box-border border-0 rounded-2xl outline-none;
   }
 }
