@@ -28,7 +28,6 @@ const { getAuthData } = useLocalStorage()
 const getMessages = async () => {
     try {
         const authData = getAuthData()
-        console.log('Auth Data:', authData)
         const res = await $axios.get('/messages', {
             headers: {
                 uid: authData.uid,
@@ -54,7 +53,6 @@ const sendMessage = (message) => {
     const user = authData.user
     if (!user.email) return
 
-    console.log('Sending message:', message)
     messageChannel.perform('receive', { message, email: user.email })
 }
 
@@ -71,17 +69,9 @@ onMounted(() => {
 
     messageChannel = $cable.subscriptions.create('RoomChannel', {
         connected() {
-            console.log('Connected to RoomChannel')
             getMessages()
         },
-        disconnected() {
-            console.log('Disconnected from RoomChannel')
-        },
-        rejected() {
-            console.log('Subscription rejected from RoomChannel')
-        },
         received(data) {
-            console.log('Received data:', data)
             const authData = getAuthData()
             const isSentByCurrentUser = data.email === authData.user.email
 
@@ -93,13 +83,10 @@ onMounted(() => {
             console.log('Received message:', data)
         }
     })
-
-    console.log('MessageChannel created:', messageChannel)
 })
 
 onBeforeUnmount(() => {
     if (messageChannel) {
-        console.log('Unsubscribing from RoomChannel')
         messageChannel.unsubscribe()
     }
 })

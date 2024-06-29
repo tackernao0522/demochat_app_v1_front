@@ -1,3 +1,5 @@
+import { defineNuxtConfig } from "nuxt/config";
+
 export default defineNuxtConfig({
   css: ["@/assets/css/tailwind.css"],
   devtools: { enabled: true },
@@ -5,13 +7,5 @@ export default defineNuxtConfig({
   modules: ["@nuxtjs/tailwindcss"],
   build: {
     transpile: ["@nuxtjs/tailwindcss"],
-  },
-  runtimeConfig: {
-    public: {
-      apiUrl:
-        process.env.NODE_ENV === "production"
-          ? "https://demochat-api.fly.dev"
-          : "http://localhost:3000",
-    },
   },
 });

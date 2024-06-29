@@ -1,4 +1,3 @@
-// composables/useLocalStorage.ts
 export const useLocalStorage = () => {
   const saveAuthData = (headers: AuthHeaders, data: AuthData) => {
     window.localStorage.setItem("access-token", headers["access-token"]);
