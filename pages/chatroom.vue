@@ -16,6 +16,7 @@ const { getAuthData } = useLocalStorage()
 const getMessages = async () => {
     try {
         const authData = getAuthData()
+        console.log('Auth Data:', authData)
         const res = await $axios.get('/messages', {
             headers: {
                 uid: authData.uid,
@@ -41,6 +42,7 @@ const sendMessage = (message) => {
     const user = authData.user
     if (!user.email) return
 
+    console.log('Sending message:', message)
     messageChannel.perform('receive', { message, email: user.email })
 }
 
@@ -77,6 +79,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     if (messageChannel) {
+        console.log('Unsubscribing from RoomChannel')
         messageChannel.unsubscribe()
     }
 })
