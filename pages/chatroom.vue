@@ -74,6 +74,12 @@ onMounted(() => {
             console.log('Connected to RoomChannel')
             getMessages()
         },
+        disconnected() {
+            console.log('Disconnected from RoomChannel')
+        },
+        rejected() {
+            console.log('Subscription rejected from RoomChannel')
+        },
         received(data) {
             console.log('Received data:', data)
             const authData = getAuthData()
