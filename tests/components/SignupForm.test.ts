@@ -1,3 +1,4 @@
+// tests/components/SignupForm.test.ts
 import { mount, flushPromises } from "@vue/test-utils";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import SignupForm from "../../components/SignupForm.vue";
@@ -75,7 +76,6 @@ describe("SignupForm", () => {
 
     await wrapper.find("form").trigger("submit");
     await flushPromises();
-
     await wrapper.vm.$nextTick();
 
     expect(localStorage.getItem("access-token")).toBe("token123");
@@ -195,7 +195,7 @@ describe("SignupForm", () => {
     });
 
     await wrapper.find("form").trigger("submit");
-
+    await flushPromises();
     await wrapper.vm.$nextTick();
 
     // localStorageに値が保存されたことを確認
@@ -230,8 +230,9 @@ describe("SignupForm", () => {
     });
 
     await wrapper.find("form").trigger("submit");
-
+    await flushPromises();
     await wrapper.vm.$nextTick();
+
     expect(wrapper.find('input[placeholder="名前"]').element.value).toBe("");
     expect(
       wrapper.find('input[placeholder="メールアドレス"]').element.value
