@@ -3,8 +3,9 @@ import { defineNuxtPlugin, useRuntimeConfig } from "#app";
 
 export default defineNuxtPlugin((nuxtApp) => {
   const config = useRuntimeConfig();
-  const wsProtocol = process.env.NODE_ENV === "production" ? "wss" : "ws";
-  const wsUrl = config.public.apiUrl.replace(/^http/, wsProtocol) + "/cable";
+  const apiUrl = config.public.apiUrl;
+  const wsUrl =
+    apiUrl.replace("http://", "ws://").replace("https://", "wss://") + "/cable";
   const consumer = createConsumer(wsUrl);
   nuxtApp.provide("cable", consumer);
 });
