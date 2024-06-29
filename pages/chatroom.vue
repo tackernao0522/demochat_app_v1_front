@@ -1,15 +1,3 @@
-<template>
-    <client-only>
-        <div class="min-h-screen bg-bodyBg text-bodyText flex flex-col items-center">
-            <div class="chat-container">
-                <Navbar :username="username" :userEmail="userEmail" />
-                <ChatWindow :messages="messages" />
-                <NewChatForm @newMessage="sendMessage" />
-            </div>
-        </div>
-    </client-only>
-</template>
-
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useNuxtApp } from '#app'
@@ -69,9 +57,11 @@ onMounted(() => {
 
     messageChannel = $cable.subscriptions.create('RoomChannel', {
         connected() {
+            console.log('Connected to RoomChannel')
             getMessages()
         },
         received(data) {
+            console.log('Received data:', data)
             const authData = getAuthData()
             const isSentByCurrentUser = data.email === authData.user.email
 
