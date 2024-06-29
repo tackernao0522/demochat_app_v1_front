@@ -3,7 +3,7 @@ import { defineNuxtConfig } from "nuxt/config";
 export default defineNuxtConfig({
   css: ["@/assets/css/tailwind.css"],
   devtools: { enabled: true },
-  plugins: ["~/plugins/axios.ts"],
+  plugins: ["~/plugins/axios.ts", "~/plugins/actioncable.ts"],
   modules: ["@nuxtjs/tailwindcss"],
   build: {
     transpile: ["@nuxtjs/tailwindcss"],

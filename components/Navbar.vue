@@ -12,18 +12,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useLogout } from '../composables/useLogout'
+import { useLocalStorage } from '../composables/useLocalStorage'
 
-const username = ref('')
-const userEmail = ref('')
-const { logout, error } = useLogout()
-const errorMessage = ref('')
+const { getAuthData } = useLocalStorage()
+const username = ref('ゲスト')
+const userEmail = ref('不明なメールアドレス')
 
 onMounted(() => {
-    username.value = localStorage.getItem('name') || 'ゲスト'
-    userEmail.value = localStorage.getItem('uid') || '不明なメールアドレス'
+    const authData = getAuthData()
+    if (authData.name) {
+        username.value = authData.name
+    }
+    if (authData.uid) {
+        userEmail.value = authData.uid
+    }
 })
+
+const { logout, error } = useLogout()
+const errorMessage = ref('')
 
 watch(error, (newError) => {
     errorMessage.value = newError || ''
