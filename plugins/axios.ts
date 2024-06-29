@@ -1,9 +1,11 @@
 import axios from "axios";
-import { defineNuxtPlugin } from "#app";
+import { defineNuxtPlugin, useRuntimeConfig } from "#app";
 
 export default defineNuxtPlugin(({ provide }) => {
+  const config = useRuntimeConfig();
+
   const api = axios.create({
-    baseURL: "http://localhost:3000",
+    baseURL: config.public.apiUrl,
   });
 
   // リクエストログ
