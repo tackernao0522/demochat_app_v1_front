@@ -93,6 +93,8 @@ onMounted(() => {
             console.log('Received message:', data)
         }
     })
+
+    console.log('MessageChannel created:', messageChannel)
 })
 
 onBeforeUnmount(() => {
