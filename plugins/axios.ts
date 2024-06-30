@@ -3,7 +3,10 @@ import { defineNuxtPlugin } from "#app";
 
 export default defineNuxtPlugin(({ provide }) => {
   const api = axios.create({
-    baseURL: "http://localhost:3000",
+    baseURL:
+      process.env.NODE_ENV === "production"
+        ? "https://demochat-api.fly.dev"
+        : "http://localhost:3000",
   });
 
   // リクエストログ
