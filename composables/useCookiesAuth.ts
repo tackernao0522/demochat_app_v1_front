@@ -1,4 +1,3 @@
-// useCookiesAuth.ts
 import { useCookies } from "vue3-cookies";
 import { useRequestHeaders } from "nuxt/app";
 import CryptoJS from "crypto-js";
