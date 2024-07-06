@@ -1,35 +1,39 @@
 import { ref } from "vue";
-import { useRouter, useNuxtApp } from "#app";
+import { useNuxtApp, useRouter } from "#app";
+import { useCookiesAuth } from "./useCookiesAuth";
 
 export const useLogout = () => {
-  const error = ref<string | null>(null);
-  const router = useRouter();
   const { $axios } = useNuxtApp();
+  const router = useRouter();
+  const { getAuthData, clearAuthData } = useCookiesAuth();
+  const error = ref(null);
 
   const logout = async () => {
     error.value = null;
-
     try {
-      const res = await $axios.delete("/auth/sign_out", {
+      const authData = getAuthData();
+      console.log("Logging out with authData:", authData);
+      const response = await $axios.delete("/auth/sign_out", {
         headers: {
-          uid: localStorage.getItem("uid")!,
-          "access-token": localStorage.getItem("access-token")!,
-          client: localStorage.getItem("client")!,
+          "access-token": authData.token,
+          client: authData.client,
+          uid: authData.uid,
         },
       });
 
-      if (!res) {
-        throw new Error("ログアウトできませんでした");
+      if (response.status === 200) {
+        clearAuthData();
+        console.log("Logout successful, cookies cleared");
+        router.push("/");
       }
-
-      console.log("ログアウトしました");
-      localStorage.clear();
-      router.push({ path: "/" });
     } catch (err) {
-      error.value = "ログアウトできませんでした";
-      console.error(err);
+      error.value = err.response ? err.response.data : err.message;
+      console.error("Logout error:", error.value);
     }
   };
 
-  return { logout, error };
+  return {
+    logout,
+    error,
+  };
 };

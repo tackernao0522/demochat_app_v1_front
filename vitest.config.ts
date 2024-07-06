@@ -10,12 +10,14 @@ export default defineConfig({
     deps: {
       inline: ["@nuxt/test-utils-edge"],
     },
+    setupFiles: ["./tests/setup.ts"],
   },
   resolve: {
     alias: {
       "#app": resolve(__dirname, "./node_modules/nuxt/dist/app"),
       "@": resolve(__dirname, "."),
       "~": resolve(__dirname, "."),
+      "#imports": resolve(__dirname, ".nuxt/imports.d.ts"),
     },
   },
 });

@@ -20,7 +20,8 @@ import LoginForm from '../components/LoginForm.vue'
 import SignupForm from '../components/SignupForm.vue'
 
 definePageMeta({
-  middleware: 'redirect-if-authenticated'
+  middleware: ['auth'],
+  requiresAuth: false
 })
 
 const shouldShowLoginForm = ref(false)

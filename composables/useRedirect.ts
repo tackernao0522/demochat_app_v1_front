@@ -7,7 +7,12 @@ export const useRedirect = () => {
     router.push("/chatroom");
   };
 
+  const redirectToLogin = () => {
+    router.push("/");
+  };
+
   return {
     redirectToChatroom,
+    redirectToLogin,
   };
 };

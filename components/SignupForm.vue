@@ -17,7 +17,7 @@
 import { ref } from 'vue'
 import { useNuxtApp } from '#app'
 import { useRedirect } from '../composables/useRedirect'
-import { useLocalStorage } from '../composables/useLocalStorage'
+import { useCookiesAuth } from '../composables/useCookiesAuth'
 import FormField from './FormField.vue'
 import MessageDisplay from './MessageDisplay.vue'
 
@@ -30,7 +30,7 @@ const errorMessage = ref('')
 
 const { $axios } = useNuxtApp()
 const { redirectToChatroom } = useRedirect()
-const { saveAuthData } = useLocalStorage()
+const { saveAuthData } = useCookiesAuth()
 
 const validateForm = () => {
     if (!name.value || !email.value || !password.value) {
@@ -77,6 +77,7 @@ const signup = async () => {
         })
 
         saveAuthData(response.headers, response.data.data)
+
         resetForm()
         redirectToChatroom()
     } catch (error) {

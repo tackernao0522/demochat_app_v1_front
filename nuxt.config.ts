@@ -8,4 +8,13 @@ export default defineNuxtConfig({
   build: {
     transpile: ["@nuxtjs/tailwindcss"],
   },
+  runtimeConfig: {
+    public: {
+      NUXT_ENV_ENCRYPTION_KEY: process.env.NUXT_ENV_ENCRYPTION_KEY || "",
+    },
+  },
+  devServer: {
+    port: parseInt(process.env.FRONT_PORT || "8080"),
+    host: "0.0.0.0",
+  },
 });

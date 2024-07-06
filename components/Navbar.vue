@@ -12,32 +12,36 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useLogout } from '../composables/useLogout'
-import { useLocalStorage } from '../composables/useLocalStorage'
+import { useCookiesAuth } from '../composables/useCookiesAuth'
 
-const { getAuthData } = useLocalStorage()
+const { getAuthData } = useCookiesAuth()
 const username = ref('ゲスト')
 const userEmail = ref('不明なメールアドレス')
 
 onMounted(() => {
     const authData = getAuthData()
-    if (authData.name) {
-        username.value = authData.name
+    if (authData.user && authData.user.name) {
+        username.value = authData.user.name
     }
     if (authData.uid) {
         userEmail.value = authData.uid
     }
+    console.log("Navbar Auth Data:", authData) // デバッグ用ログ
 })
 
 const { logout, error } = useLogout()
 const errorMessage = ref('')
 
-watch(error, (newError) => {
-    errorMessage.value = newError || ''
-})
-
 const handleLogout = async () => {
-    await logout()
+    try {
+        await logout()
+        // ログアウト処理は useLogout 内で行われるため、
+        // ここでは追加のリダイレクト処理は不要です
+    } catch (err) {
+        errorMessage.value = error.value || 'ログアウトに失敗しました'
+        console.error("Logout Error:", err)
+    }
 }
 </script>

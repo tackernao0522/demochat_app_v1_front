@@ -1,10 +1,12 @@
 <template>
     <div class="form-container">
         <h2 class="form-title">ログイン</h2>
-        <form @submit.prevent="login" class="form-layout">
+        <form @submit.prevent="handleLogin" class="form-layout">
             <FormField type="email" placeholder="メールアドレス" v-model="email" />
             <FormField type="password" placeholder="パスワード" v-model="password" />
-            <button class="btn-primary">ログインする</button>
+            <button class="btn-primary" :disabled="isLoading">
+                {{ isLoading ? 'ログイン中...' : 'ログインする' }}
+            </button>
         </form>
         <MessageDisplay :message="errorMessage" :isError="true" />
         <MessageDisplay :message="successMessage" :isError="false" data-testid="success-message" />
@@ -13,59 +15,20 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useNuxtApp } from '#app'
-import { useRedirect } from '../composables/useRedirect'
-import { useLocalStorage } from '../composables/useLocalStorage'
+import { useAuth } from '../composables/useAuth'
 import FormField from './FormField.vue'
 import MessageDisplay from './MessageDisplay.vue'
 
 const email = ref('')
 const password = ref('')
-const errorMessage = ref('')
-const successMessage = ref('')
 
-const { $axios } = useNuxtApp()
-const { redirectToChatroom } = useRedirect()
-const { saveAuthData } = useLocalStorage()
+const { login, errorMessage, successMessage, isLoading } = useAuth()
 
-const validateForm = () => {
-    if (!email.value || !password.value) {
-        errorMessage.value = 'メールアドレスとパスワードを入力してください。'
-        return false
-    }
-    return true
-}
-
-const handleLoginError = (error: any) => {
-    if (error.response && error.response.data && error.response.data.errors) {
-        errorMessage.value = error.response.data.errors.join(', ')
+const handleLogin = () => {
+    if (email.value && password.value) {
+        login(email.value, password.value)
     } else {
-        errorMessage.value = 'ログイン中にエラーが発生しました。'
-    }
-    console.error('ログインエラー:', error)
-}
-
-const resetForm = () => {
-    email.value = ''
-    password.value = ''
-}
-
-const login = async () => {
-    errorMessage.value = ''
-    successMessage.value = ''
-
-    if (!validateForm()) return
-
-    try {
-        const response = await $axios.post('/auth/sign_in', {
-            email: email.value,
-            password: password.value
-        })
-        saveAuthData(response.headers, response.data.data)
-        resetForm()
-        redirectToChatroom()
-    } catch (error) {
-        handleLoginError(error)
+        errorMessage.value = 'メールアドレスとパスワードを入力してください。'
     }
 }
 </script>

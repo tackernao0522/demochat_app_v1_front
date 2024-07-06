@@ -1,33 +1,33 @@
 import axios from "axios";
 import { defineNuxtPlugin } from "#app";
+import { useCookiesAuth } from "../composables/useCookiesAuth";
 
-export default defineNuxtPlugin(({ provide }) => {
+export default defineNuxtPlugin(() => {
+  const { saveAuthData } = useCookiesAuth();
+
   const api = axios.create({
     baseURL:
       process.env.NODE_ENV === "production"
         ? "https://demochat-api.fly.dev"
         : "http://localhost:3000",
+    withCredentials: true,
   });
 
-  // リクエストログ
-  api.interceptors.request.use((config) => {
-    console.log(config);
-    return config;
-  });
-
-  // レスポンスログ
   api.interceptors.response.use(
     (response) => {
+      // 認証データの保存をここでは行わない
       console.log(response);
       return response;
     },
     (error) => {
-      // エラーログ
       console.log(error.response);
       return Promise.reject(error);
     }
   );
 
-  // axiosをnuxtアプリケーションに注入
-  provide("axios", api);
+  return {
+    provide: {
+      axios: api,
+    },
+  };
 });

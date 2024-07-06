@@ -1,5 +1,5 @@
 import { defineNuxtRouteMiddleware } from "nuxt/app";
-import { useLocalStorage } from "../composables/useLocalStorage";
+import { useCookies } from "vue3-cookies";
 import { useRedirect } from "../composables/useRedirect";
 
 export default defineNuxtRouteMiddleware(() => {
@@ -9,10 +9,14 @@ export default defineNuxtRouteMiddleware(() => {
     return;
   }
 
-  const { isAuthenticated } = useLocalStorage();
+  const { cookies } = useCookies();
   const { redirectToChatroom } = useRedirect();
 
-  if (isAuthenticated()) {
+  const token = cookies.get("access-token");
+  const client = cookies.get("client");
+  const uid = cookies.get("uid");
+
+  if (token && client && uid) {
     console.log("既にログインしています。");
     redirectToChatroom();
   }

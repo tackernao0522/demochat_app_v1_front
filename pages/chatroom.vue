@@ -16,18 +16,26 @@ import { useNuxtApp } from '#app'
 import Navbar from '../components/Navbar.vue'
 import ChatWindow from '../components/ChatWindow.vue'
 import NewChatForm from '../components/NewChatForm.vue'
-import { useLocalStorage } from '../composables/useLocalStorage'
+import { useCookiesAuth } from '../composables/useCookiesAuth'
+import { useRedirect } from '../composables/useRedirect' // useRedirectをインポート
+
+definePageMeta({
+    middleware: ['auth'],
+    requiresAuth: true
+})
 
 const messages = ref([])
-const username = ref('ゲスト')
-const userEmail = ref('不明なメールアドレス')
+const username = ref('')
+const userEmail = ref('')
 
 const { $axios, $cable } = useNuxtApp()
-const { getAuthData } = useLocalStorage()
+const { getAuthData, isAuthenticated } = useCookiesAuth()
+const { redirectToLogin } = useRedirect() // redirectToLoginを使用
 
 const getMessages = async () => {
     try {
         const authData = getAuthData()
+        console.log("Auth Data in getMessages:", authData);  // デバッグログを追加
         const res = await $axios.get('/messages', {
             headers: {
                 uid: authData.uid,
@@ -59,7 +67,14 @@ const sendMessage = (message) => {
 let messageChannel
 
 onMounted(() => {
+    if (!isAuthenticated()) {
+        // トークンが無効または期限切れの場合、再ログインを促す
+        redirectToLogin() // redirectToLoginを使用
+        return
+    }
+
     const authData = getAuthData()
+    console.log("Auth Data on Mounted:", authData);  // デバッグログを追加
     if (authData.user.name) {
         username.value = authData.user.name
     }
@@ -89,9 +104,5 @@ onBeforeUnmount(() => {
     if (messageChannel) {
         messageChannel.unsubscribe()
     }
-})
-
-definePageMeta({
-    middleware: 'auth'
 })
 </script>
