@@ -1,4 +1,6 @@
+// useCookiesAuth.ts
 import { useCookies } from "vue3-cookies";
+import { useRequestHeaders } from "nuxt/app";
 import CryptoJS from "crypto-js";
 import { useRuntimeConfig } from "#app";
 
@@ -9,6 +11,9 @@ export const useCookiesAuth = () => {
   let encryptionKey = config.public.NUXT_ENV_ENCRYPTION_KEY;
 
   if (!encryptionKey) {
+    console.warn(
+      "NUXT_ENV_ENCRYPTION_KEY is not set. Using fallback key for development."
+    );
     encryptionKey = "development_fallback_key";
   }
 
@@ -17,13 +22,8 @@ export const useCookiesAuth = () => {
   };
 
   const decrypt = (ciphertext: string): string => {
-    try {
-      const bytes = CryptoJS.AES.decrypt(ciphertext, encryptionKey);
-      return bytes.toString(CryptoJS.enc.Utf8);
-    } catch (e) {
-      console.error("Error decrypting:", e);
-      return "";
-    }
+    const bytes = CryptoJS.AES.decrypt(ciphertext, encryptionKey);
+    return bytes.toString(CryptoJS.enc.Utf8);
   };
 
   const parseUserCookie = (userCookie: string | null): any => {
@@ -35,6 +35,19 @@ export const useCookiesAuth = () => {
       console.error("Error parsing user cookie:", e);
       return null;
     }
+  };
+
+  const parseCookieHeader = (cookieHeader: string) => {
+    const cookies = {};
+    cookieHeader.split(";").forEach((cookie) => {
+      const parts = cookie.split("=");
+      if (parts.length === 2) {
+        const key = parts[0].trim();
+        const value = parts[1].trim();
+        cookies[key] = decodeURIComponent(value);
+      }
+    });
+    return cookies;
   };
 
   const getAuthData = () => {
@@ -70,9 +83,7 @@ export const useCookiesAuth = () => {
   };
 
   const saveAuthData = (headers: any, userData: any) => {
-    if (process.server) {
-      return;
-    }
+    if (process.server) return;
 
     clearAuthData();
 
@@ -92,34 +103,27 @@ export const useCookiesAuth = () => {
   };
 
   const clearAuthData = () => {
-    if (process.server) {
-      return;
-    }
+    if (process.server) return;
 
-    const cookiesToClear = ["access-token", "client", "uid", "user", "expiry"];
-    cookiesToClear.forEach((cookieName) => {
-      cookies.remove(cookieName);
-    });
+    ["access-token", "client", "uid", "user", "expiry"].forEach(
+      (cookieName) => {
+        cookies.remove(cookieName);
+      }
+    );
   };
 
   const isAuthenticated = () => {
-    if (process.server) {
-      return false;
-    }
+    if (process.server) return false;
     const { token, client, uid } = getAuthData();
-    const result = !!token && !!client && !!uid && !isTokenExpired();
-    return result;
+    return !!token && !!client && !!uid && !isTokenExpired();
   };
 
   const isTokenExpired = () => {
-    if (process.server) {
-      return true;
-    }
+    if (process.server) return true;
     const expiry = getAuthData().expiry;
     if (!expiry) return true;
     const expiryDate = new Date(parseInt(expiry) * 1000);
-    const isExpired = new Date() > expiryDate;
-    return isExpired;
+    return new Date() > expiryDate;
   };
 
   return {
