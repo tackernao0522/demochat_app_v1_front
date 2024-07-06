@@ -50,6 +50,34 @@ export const useCookiesAuth = () => {
     return cookies;
   };
 
+  const saveAuthData = (headers: any, userData: any) => {
+    console.log("Saving auth data to cookies");
+    if (process.server) {
+      console.log("Skipping auth data save on server side");
+      return;
+    }
+
+    console.log("Saving auth data", headers, userData);
+    clearAuthData();
+
+    const authDataToSave = {
+      "access-token": headers["access-token"]
+        ? encrypt(headers["access-token"])
+        : "",
+      client: headers.client ? encrypt(headers.client) : "",
+      uid: headers.uid ? encrypt(headers.uid) : "",
+      expiry: headers.expiry ? encrypt(headers.expiry) : "",
+      user: userData ? encrypt(JSON.stringify(userData)) : "",
+    };
+
+    Object.entries(authDataToSave).forEach(([key, value]) => {
+      if (value) {
+        cookies.set(key, value, cookieOptions);
+        console.log(`Set ${key} cookie with value: ${value}`);
+      }
+    });
+  };
+
   const getAuthData = () => {
     console.log("Getting auth data from cookies");
     if (process.server) {
@@ -83,34 +111,6 @@ export const useCookiesAuth = () => {
       console.log("Auth data from cookies:", authData);
       return authData;
     }
-  };
-
-  const saveAuthData = (headers: any, userData: any) => {
-    console.log("Saving auth data to cookies");
-    if (process.server) {
-      console.log("Skipping auth data save on server side");
-      return;
-    }
-
-    console.log("Saving auth data", headers, userData);
-    clearAuthData();
-
-    const authDataToSave = {
-      "access-token": headers["access-token"]
-        ? encrypt(headers["access-token"])
-        : "",
-      client: headers.client ? encrypt(headers.client) : "",
-      uid: headers.uid ? encrypt(headers.uid) : "",
-      expiry: headers.expiry ? encrypt(headers.expiry) : "",
-      user: userData ? encrypt(JSON.stringify(userData)) : "",
-    };
-
-    Object.entries(authDataToSave).forEach(([key, value]) => {
-      if (value) {
-        cookies.set(key, value, cookieOptions);
-        console.log(`Set ${key} cookie with value: ${value}`);
-      }
-    });
   };
 
   const clearAuthData = () => {
