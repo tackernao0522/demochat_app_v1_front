@@ -96,17 +96,19 @@ export const useCookiesAuth = () => {
     clearAuthData();
 
     const authDataToSave = {
-      "access-token": encrypt(headers["access-token"]),
-      client: encrypt(headers.client),
-      uid: encrypt(headers.uid),
-      expiry: encrypt(headers.expiry),
-      user: encrypt(JSON.stringify(userData)),
+      "access-token": headers["access-token"]
+        ? encrypt(headers["access-token"])
+        : "",
+      client: headers.client ? encrypt(headers.client) : "",
+      uid: headers.uid ? encrypt(headers.uid) : "",
+      expiry: headers.expiry ? encrypt(headers.expiry) : "",
+      user: userData ? encrypt(JSON.stringify(userData)) : "",
     };
 
     Object.entries(authDataToSave).forEach(([key, value]) => {
       if (value) {
         cookies.set(key, value, cookieOptions);
-        console.log(`Set ${key} cookie`);
+        console.log(`Set ${key} cookie with value: ${value}`);
       }
     });
   };
