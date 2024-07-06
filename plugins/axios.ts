@@ -15,7 +15,6 @@ export default defineNuxtPlugin(() => {
 
   api.interceptors.response.use(
     (response) => {
-      // 認証データの保存をここでは行わない
       console.log(response);
       return response;
     },
