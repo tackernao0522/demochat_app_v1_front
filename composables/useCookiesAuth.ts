@@ -51,6 +51,7 @@ export const useCookiesAuth = () => {
   };
 
   const getAuthData = () => {
+    console.log("Getting auth data from cookies");
     if (process.server) {
       const headers = useRequestHeaders(["cookie"]);
       const cookieHeader = headers.cookie || "";
@@ -70,7 +71,7 @@ export const useCookiesAuth = () => {
           : null,
       };
     } else {
-      return {
+      const authData = {
         token: cookies.get("access-token")
           ? decrypt(cookies.get("access-token"))
           : null,
@@ -79,12 +80,19 @@ export const useCookiesAuth = () => {
         user: parseUserCookie(cookies.get("user")),
         expiry: cookies.get("expiry") ? decrypt(cookies.get("expiry")) : null,
       };
+      console.log("Auth data from cookies:", authData);
+      return authData;
     }
   };
 
   const saveAuthData = (headers: any, userData: any) => {
-    if (process.server) return;
+    console.log("Saving auth data to cookies");
+    if (process.server) {
+      console.log("Skipping auth data save on server side");
+      return;
+    }
 
+    console.log("Saving auth data", headers, userData);
     clearAuthData();
 
     const authDataToSave = {
@@ -98,6 +106,7 @@ export const useCookiesAuth = () => {
     Object.entries(authDataToSave).forEach(([key, value]) => {
       if (value) {
         cookies.set(key, value, cookieOptions);
+        console.log(`Set ${key} cookie`);
       }
     });
   };
