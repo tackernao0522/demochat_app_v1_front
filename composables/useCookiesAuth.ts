@@ -21,12 +21,22 @@ export const useCookiesAuth = () => {
   }
 
   const encrypt = (text: string): string => {
-    return CryptoJS.AES.encrypt(text, encryptionKey).toString();
+    try {
+      return CryptoJS.AES.encrypt(text, encryptionKey).toString();
+    } catch (error) {
+      console.error("Encryption error:", error);
+      return "";
+    }
   };
 
   const decrypt = (ciphertext: string): string => {
-    const bytes = CryptoJS.AES.decrypt(ciphertext, encryptionKey);
-    return bytes.toString(CryptoJS.enc.Utf8);
+    try {
+      const bytes = CryptoJS.AES.decrypt(ciphertext, encryptionKey);
+      return bytes.toString(CryptoJS.enc.Utf8);
+    } catch (error) {
+      console.error("Decryption error:", error);
+      return "";
+    }
   };
 
   const parseUserCookie = (userCookie: string | null): any => {
@@ -60,7 +70,8 @@ export const useCookiesAuth = () => {
       return;
     }
 
-    console.log("Saving auth data", headers, userData);
+    console.log("Headers received:", headers);
+    console.log("User data received:", userData);
     clearAuthData();
 
     const authDataToSave = {
@@ -75,10 +86,18 @@ export const useCookiesAuth = () => {
 
     Object.entries(authDataToSave).forEach(([key, value]) => {
       if (value) {
-        cookies.set(key, value, cookieOptions);
-        console.log(`Set ${key} cookie with value: ${value}`);
+        try {
+          cookies.set(key, value, cookieOptions);
+          console.log(`Set ${key} cookie with encrypted value`);
+        } catch (error) {
+          console.error(`Error setting ${key} cookie:`, error);
+        }
+      } else {
+        console.warn(`Empty value for ${key}, cookie not set`);
       }
     });
+
+    console.log("Auth data saved successfully");
   };
 
   const getAuthData = () => {
@@ -88,7 +107,7 @@ export const useCookiesAuth = () => {
       const cookieHeader = headers.cookie || "";
       const parsedCookies = parseCookieHeader(cookieHeader);
 
-      return {
+      const authData = {
         token: parsedCookies["access-token"]
           ? decrypt(parsedCookies["access-token"])
           : null,
@@ -101,6 +120,9 @@ export const useCookiesAuth = () => {
           ? decrypt(parsedCookies["expiry"])
           : null,
       };
+
+      console.log("Auth data retrieved on server:", authData);
+      return authData;
     } else {
       const authData = {
         token: cookies.get("access-token")
@@ -111,7 +133,7 @@ export const useCookiesAuth = () => {
         user: parseUserCookie(cookies.get("user")),
         expiry: cookies.get("expiry") ? decrypt(cookies.get("expiry")) : null,
       };
-      console.log("Auth data from cookies:", authData);
+      console.log("Auth data retrieved from cookies:", authData);
       return authData;
     }
   };
@@ -121,7 +143,12 @@ export const useCookiesAuth = () => {
 
     ["access-token", "client", "uid", "user", "expiry"].forEach(
       (cookieName) => {
-        cookies.remove(cookieName);
+        try {
+          cookies.remove(cookieName);
+          console.log(`Removed ${cookieName} cookie`);
+        } catch (error) {
+          console.error(`Error removing ${cookieName} cookie:`, error);
+        }
       }
     );
   };
@@ -129,15 +156,22 @@ export const useCookiesAuth = () => {
   const isAuthenticated = () => {
     if (process.server) return false;
     const { token, client, uid } = getAuthData();
-    return !!token && !!client && !!uid && !isTokenExpired();
+    const authenticated = !!token && !!client && !!uid && !isTokenExpired();
+    console.log("Is authenticated:", authenticated);
+    return authenticated;
   };
 
   const isTokenExpired = () => {
     if (process.server) return true;
     const expiry = getAuthData().expiry;
-    if (!expiry) return true;
+    if (!expiry) {
+      console.log("No expiry found, token considered expired");
+      return true;
+    }
     const expiryDate = new Date(parseInt(expiry) * 1000);
-    return new Date() > expiryDate;
+    const isExpired = new Date() > expiryDate;
+    console.log("Token expiry:", expiryDate, "Is expired:", isExpired);
+    return isExpired;
   };
 
   return {

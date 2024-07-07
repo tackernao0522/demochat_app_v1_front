@@ -13,7 +13,7 @@ export const useAuth = () => {
   const isLoading = ref(false);
 
   const handleAuthResponse = (response: any) => {
-    console.log("Handling auth response");
+    console.log("Handling auth response", response);
     if (response.status === 200 && response.data && response.headers) {
       saveAuthData(response.headers, response.data.data);
       successMessage.value =
@@ -22,7 +22,7 @@ export const useAuth = () => {
         redirectToChatroom();
       }, 100);
     } else {
-      console.error("Invalid auth response");
+      console.error("Invalid auth response", response);
       throw new Error("認証レスポンスが不正です");
     }
   };
@@ -40,7 +40,6 @@ export const useAuth = () => {
       console.error("Login error:", error);
       errorMessage.value =
         error.response?.data?.errors?.[0] || "ログインに失敗しました";
-      console.error("ログインエラー:", error);
     } finally {
       isLoading.value = false;
     }

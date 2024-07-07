@@ -4,11 +4,21 @@ export const useRedirect = () => {
   const router = useRouter();
 
   const redirectToChatroom = async () => {
-    await router.push("/chatroom");
+    console.log("Redirecting to chatroom");
+    try {
+      await router.push("/chatroom");
+    } catch (error) {
+      console.error("Error redirecting to chatroom:", error);
+    }
   };
 
   const redirectToLogin = async () => {
-    await router.push("/");
+    console.log("Redirecting to login");
+    try {
+      await router.push("/");
+    } catch (error) {
+      console.error("Error redirecting to login:", error);
+    }
   };
 
   return {
