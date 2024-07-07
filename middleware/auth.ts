@@ -1,23 +1,16 @@
 import { defineNuxtRouteMiddleware, navigateTo } from "nuxt/app";
 import { useCookiesAuth } from "~/composables/useCookiesAuth";
 
-export default defineNuxtRouteMiddleware((to) => {
-  // サーバーサイドではミドルウェアの処理をスキップ
-  if (process.server) {
-    return;
-  }
-
+export default defineNuxtRouteMiddleware(async (to) => {
   const { isAuthenticated } = useCookiesAuth();
 
-  // 認証が必要なページへのアクセスをチェック
-  if (to.meta.requiresAuth && !isAuthenticated()) {
-    // 認証されていない場合、ホームページにリダイレクト
+  const authenticated = await isAuthenticated();
+
+  if (to.meta.requiresAuth && !authenticated) {
     return navigateTo("/");
   }
 
-  // 既に認証されているユーザーがホームページにアクセスしようとした場合、
-  // チャットルームにリダイレクト
-  if (to.path === "/" && isAuthenticated()) {
+  if (to.path === "/" && authenticated) {
     return navigateTo("/chatroom");
   }
 });

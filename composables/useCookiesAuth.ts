@@ -5,7 +5,11 @@ import { useRuntimeConfig } from "#app";
 
 export const useCookiesAuth = () => {
   const { cookies } = useCookies();
-  const cookieOptions = { path: "/", secure: true, sameSite: "Lax" };
+  const cookieOptions = {
+    path: "/",
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+  };
   const config = useRuntimeConfig();
   let encryptionKey = config.public.NUXT_ENV_ENCRYPTION_KEY;
 

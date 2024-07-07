@@ -3,12 +3,12 @@ import { useRouter } from "#app";
 export const useRedirect = () => {
   const router = useRouter();
 
-  const redirectToChatroom = () => {
-    router.push("/chatroom");
+  const redirectToChatroom = async () => {
+    await router.push("/chatroom");
   };
 
-  const redirectToLogin = () => {
-    router.push("/");
+  const redirectToLogin = async () => {
+    await router.push("/");
   };
 
   return {
