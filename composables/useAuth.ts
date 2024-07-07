@@ -15,7 +15,13 @@ export const useAuth = () => {
   const handleAuthResponse = (response: any) => {
     console.log("Handling auth response", response);
     if (response.status === 200 && response.data && response.headers) {
-      saveAuthData(response.headers, response.data.data);
+      const authHeaders = {
+        "access-token": response.headers["access-token"],
+        client: response.headers["client"],
+        uid: response.headers["uid"],
+        expiry: response.headers["expiry"],
+      };
+      saveAuthData(authHeaders, response.data.data);
       successMessage.value =
         "認証に成功しました。チャットルームにリダイレクトします...";
       setTimeout(() => {
@@ -34,7 +40,17 @@ export const useAuth = () => {
     successMessage.value = "";
 
     try {
-      const response = await $axios.post("/auth/sign_in", { email, password });
+      const response = await $axios.post(
+        "/auth/sign_in",
+        { email, password },
+        {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
       handleAuthResponse(response);
     } catch (error: any) {
       console.error("Login error:", error);
@@ -46,17 +62,28 @@ export const useAuth = () => {
   };
 
   const signup = async (email: string, password: string, name: string) => {
+    console.log("Attempting signup for:", email);
     isLoading.value = true;
     errorMessage.value = "";
     successMessage.value = "";
 
     try {
-      const response = await $axios.post("/auth", { email, password, name });
+      const response = await $axios.post(
+        "/auth",
+        { email, password, name },
+        {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
       handleAuthResponse(response);
     } catch (error: any) {
+      console.error("Signup error:", error);
       errorMessage.value =
         error.response?.data?.errors?.[0] || "サインアップに失敗しました";
-      console.error("サインアップエラー:", error);
     } finally {
       isLoading.value = false;
     }
@@ -75,6 +102,7 @@ export const useAuth = () => {
           client: authData.client,
           uid: authData.uid,
         },
+        withCredentials: true,
       });
       // ログアウト後にCookieをクリア
       saveAuthData({}, null);

@@ -1,15 +1,13 @@
 import axios from "axios";
-import { defineNuxtPlugin } from "#app";
+import { defineNuxtPlugin, useRuntimeConfig } from "#app";
 import { useCookiesAuth } from "../composables/useCookiesAuth";
 
 export default defineNuxtPlugin(() => {
   const { saveAuthData } = useCookiesAuth();
+  const config = useRuntimeConfig();
 
   const api = axios.create({
-    baseURL:
-      process.env.NODE_ENV === "production"
-        ? "https://demochat-api.fly.dev"
-        : "http://localhost:3000",
+    baseURL: config.public.apiUrl,
     withCredentials: true,
   });
 
