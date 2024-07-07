@@ -1,16 +1,22 @@
 import { ref } from "vue";
-import { useNuxtApp } from "#app";
+import axios from "axios";
 import { useCookiesAuth } from "./useCookiesAuth";
 import { useRedirect } from "./useRedirect";
+import { useRuntimeConfig } from "#app";
 
 export const useAuth = () => {
-  const { $axios } = useNuxtApp();
+  const config = useRuntimeConfig();
   const { saveAuthData, getAuthData } = useCookiesAuth();
   const { redirectToChatroom } = useRedirect();
 
   const errorMessage = ref("");
   const successMessage = ref("");
   const isLoading = ref(false);
+
+  const api = axios.create({
+    baseURL: config.public.apiUrl,
+    withCredentials: true,
+  });
 
   const handleAuthResponse = (response: any) => {
     console.log("Handling auth response", response);
@@ -40,7 +46,7 @@ export const useAuth = () => {
     successMessage.value = "";
 
     try {
-      const response = await $axios.post(
+      const response = await api.post(
         "/auth/sign_in",
         { email, password },
         {
@@ -48,7 +54,6 @@ export const useAuth = () => {
             Accept: "application/json",
             "Content-Type": "application/json",
           },
-          withCredentials: true,
         }
       );
       handleAuthResponse(response);
@@ -68,7 +73,7 @@ export const useAuth = () => {
     successMessage.value = "";
 
     try {
-      const response = await $axios.post(
+      const response = await api.post(
         "/auth",
         { email, password, name },
         {
@@ -76,7 +81,6 @@ export const useAuth = () => {
             Accept: "application/json",
             "Content-Type": "application/json",
           },
-          withCredentials: true,
         }
       );
       handleAuthResponse(response);
@@ -96,13 +100,12 @@ export const useAuth = () => {
 
     try {
       const authData = getAuthData();
-      await $axios.delete("/auth/sign_out", {
+      await api.delete("/auth/sign_out", {
         headers: {
           "access-token": authData.token,
           client: authData.client,
           uid: authData.uid,
         },
-        withCredentials: true,
       });
       // ログアウト後にCookieをクリア
       saveAuthData({}, null);
