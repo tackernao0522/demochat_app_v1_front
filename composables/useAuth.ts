@@ -27,6 +27,7 @@ export const useAuth = () => {
         uid: response.headers["uid"],
         expiry: response.headers["expiry"],
       };
+      console.log("Auth headers to save:", authHeaders);
       saveAuthData(authHeaders, response.data.data);
       successMessage.value =
         "認証に成功しました。チャットルームにリダイレクトします...";
@@ -81,8 +82,10 @@ export const useAuth = () => {
             Accept: "application/json",
             "Content-Type": "application/json",
           },
+          withCredentials: true,
         }
       );
+      console.log("Signup response headers:", response.headers);
       handleAuthResponse(response);
     } catch (error: any) {
       console.error("Signup error:", error);
