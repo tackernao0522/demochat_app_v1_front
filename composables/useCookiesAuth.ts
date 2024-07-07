@@ -2,6 +2,7 @@ import { useCookies } from "vue3-cookies";
 import { useRequestHeaders } from "nuxt/app";
 import CryptoJS from "crypto-js";
 import { useRuntimeConfig } from "#app";
+import { logger } from "~/utils/logger"; // 新しく追加したloggerをインポート
 
 export const useCookiesAuth = () => {
   const { cookies } = useCookies();
@@ -14,7 +15,7 @@ export const useCookiesAuth = () => {
   let encryptionKey = config.public.NUXT_ENV_ENCRYPTION_KEY;
 
   if (!encryptionKey) {
-    console.warn(
+    logger.warn(
       "NUXT_ENV_ENCRYPTION_KEY is not set. Using fallback key for development."
     );
     encryptionKey = "development_fallback_key";
@@ -24,7 +25,7 @@ export const useCookiesAuth = () => {
     try {
       return CryptoJS.AES.encrypt(text, encryptionKey).toString();
     } catch (error) {
-      console.error("Encryption error:", error);
+      logger.error("Encryption error:", error);
       return "";
     }
   };
@@ -34,7 +35,7 @@ export const useCookiesAuth = () => {
       const bytes = CryptoJS.AES.decrypt(ciphertext, encryptionKey);
       return bytes.toString(CryptoJS.enc.Utf8);
     } catch (error) {
-      console.error("Decryption error:", error);
+      logger.error("Decryption error:", error);
       return "";
     }
   };
@@ -45,7 +46,7 @@ export const useCookiesAuth = () => {
       const decryptedUserCookie = decrypt(userCookie);
       return JSON.parse(decryptedUserCookie);
     } catch (e) {
-      console.error("Error parsing user cookie:", e);
+      logger.error("Error parsing user cookie:", e);
       return null;
     }
   };
@@ -64,14 +65,14 @@ export const useCookiesAuth = () => {
   };
 
   const saveAuthData = (headers: any, userData: any) => {
-    console.log("Saving auth data to cookies");
+    logger.debug("Saving auth data to cookies");
     if (process.server) {
-      console.log("Skipping auth data save on server side");
+      logger.debug("Skipping auth data save on server side");
       return;
     }
 
-    console.log("Headers received:", headers);
-    console.log("User data received:", userData);
+    logger.debug("Headers received:", headers);
+    logger.debug("User data received:", userData);
     clearAuthData();
 
     const authDataToSave = {
@@ -87,20 +88,20 @@ export const useCookiesAuth = () => {
         try {
           const encryptedValue = encrypt(value);
           cookies.set(key, encryptedValue, cookieOptions);
-          console.log(`Set ${key} cookie with encrypted value`);
+          logger.debug(`Set ${key} cookie with encrypted value`);
         } catch (error) {
-          console.error(`Error setting ${key} cookie:`, error);
+          logger.error(`Error setting ${key} cookie:`, error);
         }
       } else {
-        console.warn(`Empty value for ${key}, cookie not set`);
+        logger.warn(`Empty value for ${key}, cookie not set`);
       }
     });
 
-    console.log("Auth data saved successfully");
+    logger.info("Auth data saved successfully");
   };
 
   const getAuthData = () => {
-    console.log("Getting auth data from cookies");
+    logger.debug("Getting auth data from cookies");
     if (process.server) {
       const headers = useRequestHeaders(["cookie"]);
       const cookieHeader = headers.cookie || "";
@@ -120,7 +121,7 @@ export const useCookiesAuth = () => {
           : null,
       };
 
-      console.log("Auth data retrieved on server:", authData);
+      logger.debug("Auth data retrieved on server:", authData);
       return authData;
     } else {
       const authData = {
@@ -132,7 +133,7 @@ export const useCookiesAuth = () => {
         user: parseUserCookie(cookies.get("user")),
         expiry: cookies.get("expiry") ? decrypt(cookies.get("expiry")) : null,
       };
-      console.log("Auth data retrieved from cookies:", authData);
+      logger.debug("Auth data retrieved from cookies:", authData);
       return authData;
     }
   };
@@ -144,9 +145,9 @@ export const useCookiesAuth = () => {
       (cookieName) => {
         try {
           cookies.remove(cookieName);
-          console.log(`Removed ${cookieName} cookie`);
+          logger.debug(`Removed ${cookieName} cookie`);
         } catch (error) {
-          console.error(`Error removing ${cookieName} cookie:`, error);
+          logger.error(`Error removing ${cookieName} cookie:`, error);
         }
       }
     );
@@ -156,7 +157,7 @@ export const useCookiesAuth = () => {
     if (process.server) return false;
     const { token, client, uid } = getAuthData();
     const authenticated = !!token && !!client && !!uid && !isTokenExpired();
-    console.log("Is authenticated:", authenticated);
+    logger.debug("Is authenticated:", authenticated);
     return authenticated;
   };
 
@@ -164,12 +165,12 @@ export const useCookiesAuth = () => {
     if (process.server) return true;
     const expiry = getAuthData().expiry;
     if (!expiry) {
-      console.log("No expiry found, token considered expired");
+      logger.debug("No expiry found, token considered expired");
       return true;
     }
     const expiryDate = new Date(parseInt(expiry) * 1000);
     const isExpired = new Date() > expiryDate;
-    console.log("Token expiry:", expiryDate, "Is expired:", isExpired);
+    logger.debug("Token expiry:", expiryDate, "Is expired:", isExpired);
     return isExpired;
   };
 

@@ -3,6 +3,7 @@ import axios from "axios";
 import { useCookiesAuth } from "./useCookiesAuth";
 import { useRedirect } from "./useRedirect";
 import { useRuntimeConfig } from "#app";
+import { logger } from "../utils/logger";
 
 export const useAuth = () => {
   const config = useRuntimeConfig();
@@ -19,7 +20,7 @@ export const useAuth = () => {
   });
 
   const handleAuthResponse = (response: any) => {
-    console.log("Handling auth response", response);
+    logger.debug("Handling auth response", response);
     if (response.status === 200 && response.data && response.headers) {
       const authHeaders = {
         "access-token": response.headers["access-token"],
@@ -27,7 +28,7 @@ export const useAuth = () => {
         uid: response.headers["uid"],
         expiry: response.headers["expiry"],
       };
-      console.log("Auth headers to save:", authHeaders);
+      logger.debug("Auth headers to save:", authHeaders);
       saveAuthData(authHeaders, response.data.data);
       successMessage.value =
         "認証に成功しました。チャットルームにリダイレクトします...";
@@ -35,13 +36,13 @@ export const useAuth = () => {
         redirectToChatroom();
       }, 100);
     } else {
-      console.error("Invalid auth response", response);
+      logger.error("Invalid auth response", response);
       throw new Error("認証レスポンスが不正です");
     }
   };
 
   const login = async (email: string, password: string) => {
-    console.log("Attempting login for:", email);
+    logger.info("Attempting login for:", email);
     isLoading.value = true;
     errorMessage.value = "";
     successMessage.value = "";
@@ -59,7 +60,7 @@ export const useAuth = () => {
       );
       handleAuthResponse(response);
     } catch (error: any) {
-      console.error("Login error:", error);
+      logger.error("Login error:", error);
       errorMessage.value =
         error.response?.data?.errors?.[0] || "ログインに失敗しました";
     } finally {
@@ -68,7 +69,7 @@ export const useAuth = () => {
   };
 
   const signup = async (email: string, password: string, name: string) => {
-    console.log("Attempting signup for:", email);
+    logger.info("Attempting signup for:", email);
     isLoading.value = true;
     errorMessage.value = "";
     successMessage.value = "";
@@ -85,10 +86,10 @@ export const useAuth = () => {
           withCredentials: true,
         }
       );
-      console.log("Signup response headers:", response.headers);
+      logger.debug("Signup response headers:", response.headers);
       handleAuthResponse(response);
     } catch (error: any) {
-      console.error("Signup error:", error);
+      logger.error("Signup error:", error);
       errorMessage.value =
         error.response?.data?.errors?.[0] || "サインアップに失敗しました";
     } finally {
@@ -97,6 +98,7 @@ export const useAuth = () => {
   };
 
   const logout = async () => {
+    logger.info("Attempting logout");
     isLoading.value = true;
     errorMessage.value = "";
     successMessage.value = "";
@@ -113,9 +115,10 @@ export const useAuth = () => {
       // ログアウト後にCookieをクリア
       saveAuthData({}, null);
       successMessage.value = "ログアウトしました";
+      logger.info("Logout successful");
     } catch (error: any) {
       errorMessage.value = "ログアウトに失敗しました";
-      console.error("ログアウトエラー:", error);
+      logger.error("Logout error:", error);
     } finally {
       isLoading.value = false;
     }
