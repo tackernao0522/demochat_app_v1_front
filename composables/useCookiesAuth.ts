@@ -10,6 +10,7 @@ export const useCookiesAuth = () => {
     path: "/",
     secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+    domain: process.env.NODE_ENV === "production" ? ".fly.dev" : undefined,
   };
   const config = useRuntimeConfig();
   let encryptionKey = config.public.NUXT_ENV_ENCRYPTION_KEY;

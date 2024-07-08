@@ -3,7 +3,7 @@ import { defineNuxtPlugin, useRuntimeConfig } from "#app";
 import { useCookiesAuth } from "../composables/useCookiesAuth";
 
 export default defineNuxtPlugin(() => {
-  const { saveAuthData } = useCookiesAuth();
+  const { saveAuthData, getAuthData } = useCookiesAuth();
   const config = useRuntimeConfig();
 
   const api = axios.create({
@@ -11,15 +11,17 @@ export default defineNuxtPlugin(() => {
     withCredentials: true,
   });
 
-  api.interceptors.response.use(
-    (response) => {
-      console.log(response);
-      return response;
+  api.interceptors.request.use(
+    (config) => {
+      const authData = getAuthData();
+      if (authData.token) {
+        config.headers["access-token"] = authData.token;
+        config.headers["client"] = authData.client;
+        config.headers["uid"] = authData.uid;
+      }
+      return config;
     },
-    (error) => {
-      console.log(error.response);
-      return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
   );
 
   return {

@@ -7,7 +7,7 @@ import { logger } from "../utils/logger";
 
 export const useAuth = () => {
   const config = useRuntimeConfig();
-  const { saveAuthData, getAuthData } = useCookiesAuth();
+  const { saveAuthData, getAuthData, clearAuthData } = useCookiesAuth();
   const { redirectToChatroom } = useRedirect();
 
   const errorMessage = ref("");
@@ -98,11 +98,6 @@ export const useAuth = () => {
   };
 
   const logout = async () => {
-    logger.info("Attempting logout");
-    isLoading.value = true;
-    errorMessage.value = "";
-    successMessage.value = "";
-
     try {
       const authData = getAuthData();
       await api.delete("/auth/sign_out", {
@@ -112,15 +107,11 @@ export const useAuth = () => {
           uid: authData.uid,
         },
       });
-      // ログアウト後にCookieをクリア
-      saveAuthData({}, null);
-      successMessage.value = "ログアウトしました";
-      logger.info("Logout successful");
-    } catch (error: any) {
+      clearAuthData();
+      redirectToLogin();
+    } catch (error) {
+      console.error("Logout error:", error);
       errorMessage.value = "ログアウトに失敗しました";
-      logger.error("Logout error:", error);
-    } finally {
-      isLoading.value = false;
     }
   };
 
