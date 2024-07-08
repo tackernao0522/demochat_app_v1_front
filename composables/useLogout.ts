@@ -21,9 +21,25 @@ export const useLogout = () => {
         },
       });
 
+      console.log("Logout response:", response);
+
       if (response.status === 200) {
         clearAuthData();
         console.log("Logout successful, cookies cleared");
+
+        // クッキーの削除
+        document.cookie =
+          "access-token=; Max-Age=0; path=/; domain=.fly.dev; secure";
+        document.cookie = "client=; Max-Age=0; path=/; domain=.fly.dev; secure";
+        document.cookie = "uid=; Max-Age=0; path=/; domain=.fly.dev; secure";
+
+        // 他のドメインに対するクッキー削除
+        document.cookie =
+          "access-token=; Max-Age=0; path=/; domain=.vercel.app; secure";
+        document.cookie =
+          "client=; Max-Age=0; path=/; domain=.vercel.app; secure";
+        document.cookie = "uid=; Max-Age=0; path=/; domain=.vercel.app; secure";
+
         router.push("/");
       }
     } catch (err) {
