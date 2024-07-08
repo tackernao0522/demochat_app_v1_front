@@ -147,7 +147,6 @@ export const useCookiesAuth = () => {
         try {
           cookies.remove(cookieName, { domain: ".fly.dev" });
           cookies.remove(cookieName, { domain: ".vercel.app" });
-          cookies.remove(cookieName); // ローカルホスト用
           logger.debug(`Removed ${cookieName} cookie`);
         } catch (error) {
           logger.error(`Error removing ${cookieName} cookie:`, error);
