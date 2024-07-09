@@ -33,22 +33,24 @@ export const useLogout = () => {
 
         // 環境に応じたドメインの設定
         const domain =
-          $config.public.nodeEnv === "development" ? "localhost" : ".fly.dev";
+          $config.public.nodeEnv === "development"
+            ? "localhost"
+            : "demochat-api.fly.dev";
         const vercelDomain =
           $config.public.nodeEnv === "development"
             ? "localhost"
-            : ".vercel.app";
+            : "front-sigma-three.vercel.app";
 
         // クッキーの削除
-        document.cookie = `access-token=; Max-Age=0; path=/; domain=${domain}; secure`;
-        document.cookie = `client=; Max-Age=0; path=/; domain=${domain}; secure`;
-        document.cookie = `uid=; Max-Age=0; path=/; domain=${domain}; secure`;
+        document.cookie = `access-token=; Max-Age=0; path=/; domain=${domain}; secure; SameSite=None`;
+        document.cookie = `client=; Max-Age=0; path=/; domain=${domain}; secure; SameSite=None`;
+        document.cookie = `uid=; Max-Age=0; path=/; domain=${domain}; secure; SameSite=None`;
 
         // 他のドメインに対するクッキー削除（本番環境のみ）
         if ($config.public.nodeEnv !== "development") {
-          document.cookie = `access-token=; Max-Age=0; path=/; domain=${vercelDomain}; secure`;
-          document.cookie = `client=; Max-Age=0; path=/; domain=${vercelDomain}; secure`;
-          document.cookie = `uid=; Max-Age=0; path=/; domain=${vercelDomain}; secure`;
+          document.cookie = `access-token=; Max-Age=0; path=/; domain=${vercelDomain}; secure; SameSite=None`;
+          document.cookie = `client=; Max-Age=0; path=/; domain=${vercelDomain}; secure; SameSite=None`;
+          document.cookie = `uid=; Max-Age=0; path=/; domain=${vercelDomain}; secure; SameSite=None`;
         }
 
         router.push("/");
