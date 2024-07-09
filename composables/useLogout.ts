@@ -3,7 +3,7 @@ import { useNuxtApp, useRouter } from "#app";
 import { useCookiesAuth } from "./useCookiesAuth";
 
 export const useLogout = () => {
-  const { $axios } = useNuxtApp();
+  const { $axios, $config } = useNuxtApp();
   const router = useRouter();
   const { getAuthData, clearAuthData } = useCookiesAuth();
   const error = ref(null);
@@ -13,10 +13,14 @@ export const useLogout = () => {
     try {
       const authData = getAuthData();
       console.log("Logging out with authData:", authData);
+
       const response = await $axios.delete("/auth/sign_out", {
         headers: {
           "access-token": authData.token,
           client: authData.client,
+          uid: authData.uid,
+        },
+        data: {
           uid: authData.uid,
         },
       });
@@ -27,18 +31,25 @@ export const useLogout = () => {
         clearAuthData();
         console.log("Logout successful, cookies cleared");
 
-        // クッキーの削除
-        document.cookie =
-          "access-token=; Max-Age=0; path=/; domain=.fly.dev; secure";
-        document.cookie = "client=; Max-Age=0; path=/; domain=.fly.dev; secure";
-        document.cookie = "uid=; Max-Age=0; path=/; domain=.fly.dev; secure";
+        // 環境に応じたドメインの設定
+        const domain =
+          $config.public.nodeEnv === "development" ? "localhost" : ".fly.dev";
+        const vercelDomain =
+          $config.public.nodeEnv === "development"
+            ? "localhost"
+            : ".vercel.app";
 
-        // 他のドメインに対するクッキー削除
-        document.cookie =
-          "access-token=; Max-Age=0; path=/; domain=.vercel.app; secure";
-        document.cookie =
-          "client=; Max-Age=0; path=/; domain=.vercel.app; secure";
-        document.cookie = "uid=; Max-Age=0; path=/; domain=.vercel.app; secure";
+        // クッキーの削除
+        document.cookie = `access-token=; Max-Age=0; path=/; domain=${domain}; secure`;
+        document.cookie = `client=; Max-Age=0; path=/; domain=${domain}; secure`;
+        document.cookie = `uid=; Max-Age=0; path=/; domain=${domain}; secure`;
+
+        // 他のドメインに対するクッキー削除（本番環境のみ）
+        if ($config.public.nodeEnv !== "development") {
+          document.cookie = `access-token=; Max-Age=0; path=/; domain=${vercelDomain}; secure`;
+          document.cookie = `client=; Max-Age=0; path=/; domain=${vercelDomain}; secure`;
+          document.cookie = `uid=; Max-Age=0; path=/; domain=${vercelDomain}; secure`;
+        }
 
         router.push("/");
       }
