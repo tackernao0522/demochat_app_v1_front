@@ -2,7 +2,7 @@ import { useCookies } from "vue3-cookies";
 import { useRequestHeaders } from "nuxt/app";
 import CryptoJS from "crypto-js";
 import { useRuntimeConfig } from "#app";
-import { logger } from "~/utils/logger";
+import { logger } from "~/utils/logger"; // 新しく追加したloggerをインポート
 
 export const useCookiesAuth = () => {
   const { cookies } = useCookies();
@@ -145,8 +145,7 @@ export const useCookiesAuth = () => {
     ["access-token", "client", "uid", "user", "expiry"].forEach(
       (cookieName) => {
         try {
-          cookies.remove(cookieName, { domain: ".fly.dev" });
-          cookies.remove(cookieName, { domain: ".vercel.app" });
+          cookies.remove(cookieName);
           logger.debug(`Removed ${cookieName} cookie`);
         } catch (error) {
           logger.error(`Error removing ${cookieName} cookie:`, error);
