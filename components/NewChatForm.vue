@@ -1,8 +1,8 @@
 <template>
     <form @submit.prevent="sendMessage" class="new-chat-form">
         <textarea placeholder="メッセージを入力してEnterを押してください" v-model="message" @keydown="onKeyDown"
-            @compositionstart="onCompositionStart" @compositionend="onCompositionEnd"
-            class="new-chat-textarea"></textarea>
+            @compositionstart="onCompositionStart" @compositionend="onCompositionEnd" class="new-chat-textarea">
+        </textarea>
     </form>
 </template>
 
@@ -17,6 +17,10 @@ const onKeyDown = (event) => {
     if (event.key === 'Enter' && !event.shiftKey && !isComposing.value) {
         event.preventDefault()
         sendMessage()
+    }
+    // 追加: Shift + Enter で改行を許可
+    if (event.key === 'Enter' && event.shiftKey) {
+        event.stopPropagation()
     }
 }
 
