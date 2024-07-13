@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick, onMounted, onUpdated } from 'vue'
+import { ref, watch, nextTick, onMounted, onBeforeUnmount, onUpdated } from 'vue'
 import { useNuxtApp } from '#app'
 import { useCookiesAuth } from '../composables/useCookiesAuth'
 import debounce from 'lodash/debounce'
@@ -123,6 +123,55 @@ const handleTouch = (message) => {
     lastTapTime = currentTime;
 }
 
+const disableZoom = () => {
+    // metaタグでズームを無効にする
+    const metaTag = document.createElement('meta')
+    metaTag.name = 'viewport'
+    metaTag.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
+    document.head.appendChild(metaTag)
+
+    // CSSでズームを無効にする
+    const style = document.createElement('style')
+    style.innerHTML = `
+    body {
+      touch-action: none;
+    }
+  `
+    document.head.appendChild(style)
+
+    // JavaScriptでズームを無効にする
+    const preventZoom = (event) => {
+        // Shift + Enter での改行を許可する
+        if (event.shiftKey && event.key === 'Enter') {
+            return
+        }
+
+        if (event.ctrlKey || event.metaKey || event.key === 'Control' || event.key === 'Meta') {
+            event.preventDefault()
+        }
+    }
+
+    const preventWheelZoom = (event) => {
+        if (event.ctrlKey || event.metaKey) {
+            event.preventDefault()
+        }
+    }
+
+    document.addEventListener('wheel', preventWheelZoom, { passive: false })
+    document.addEventListener('keydown', preventZoom, { passive: false })
+
+    return { metaTag, style, preventZoom, preventWheelZoom }
+}
+
+const enableZoom = (zoomSettings) => {
+    document.head.removeChild(zoomSettings.metaTag)
+    document.head.removeChild(zoomSettings.style)
+    document.removeEventListener('wheel', zoomSettings.preventWheelZoom)
+    document.removeEventListener('keydown', zoomSettings.preventZoom)
+}
+
+let zoomSettings;
+
 watch(() => props.messages, async (newMessages) => {
     console.log('Messages in ChatWindow:', newMessages)
     await nextTick()
@@ -131,6 +180,16 @@ watch(() => props.messages, async (newMessages) => {
 
 onMounted(() => {
     scrollToBottom()
+    zoomSettings = disableZoom()
+})
+
+onBeforeUnmount(() => {
+    if (messageChannel) {
+        messageChannel.unsubscribe()
+    }
+    if (zoomSettings) {
+        enableZoom(zoomSettings)
+    }
 })
 
 onUpdated(() => {
