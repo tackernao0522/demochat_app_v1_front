@@ -24,6 +24,34 @@ export default defineNuxtPlugin(() => {
     (error) => Promise.reject(error)
   );
 
+  api.interceptors.response.use(
+    (response) => {
+      const token = response.headers["access-token"];
+      const client = response.headers["client"];
+      const uid = response.headers["uid"];
+      const expiry = response.headers["expiry"];
+
+      if (token && client && uid && expiry) {
+        const currentAuthData = getAuthData();
+        saveAuthData(
+          {
+            "access-token": token,
+            client,
+            uid,
+            expiry,
+          },
+          currentAuthData.user
+        );
+      }
+      return response;
+    },
+    (error) => {
+      console.error("Axios error:", error);
+      // エラーメッセージをユーザーに表示するロジックを追加する場合はここに実装
+      return Promise.reject(error);
+    }
+  );
+
   return {
     provide: {
       axios: api,

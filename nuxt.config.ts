@@ -1,9 +1,16 @@
 import { defineNuxtConfig } from "nuxt/config";
 
 export default defineNuxtConfig({
-  css: ["@/assets/css/tailwind.css"],
+  css: [
+    "@fortawesome/fontawesome-svg-core/styles.css",
+    "@/assets/css/tailwind.css",
+  ],
   devtools: { enabled: true },
-  plugins: ["~/plugins/axios.ts", "~/plugins/actioncable.ts"],
+  plugins: [
+    "~/plugins/fontawesome.ts",
+    "~/plugins/axios.ts",
+    "~/plugins/actioncable.ts",
+  ],
   modules: ["@nuxtjs/tailwindcss"],
   build: {
     transpile: ["@nuxtjs/tailwindcss"],
