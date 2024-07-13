@@ -6,20 +6,17 @@
 import { onMounted } from 'vue'
 
 onMounted(() => {
+  // 既存のviewport metaタグを削除（もしあれば）
+  const existingMetaTag = document.querySelector('meta[name="viewport"]')
+  if (existingMetaTag) {
+    existingMetaTag.remove()
+  }
+
   // metaタグでズームを無効にする
   const metaTag = document.createElement('meta')
   metaTag.name = 'viewport'
   metaTag.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
   document.head.appendChild(metaTag)
-
-  // CSSでズームを無効にする
-  const style = document.createElement('style')
-  style.innerHTML = `
-    body {
-      touch-action: none;
-    }
-  `
-  document.head.appendChild(style)
 
   // JavaScriptでズームを無効にする
   const preventZoom = (event) => {

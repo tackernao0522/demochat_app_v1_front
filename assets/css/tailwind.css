@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 body {
-  @apply bg-bodyBg text-bodyText min-h-screen;
+  @apply bg-bodyBg text-bodyText min-h-screen touch-none;
 }
 
 @layer components {
@@ -30,15 +30,15 @@ body {
   }
 
   .chat-window {
-    @apply flex-grow overflow-y-auto overflow-x-hidden border border-gray-300 rounded-lg shadow-lg;
+    @apply flex-grow overflow-y-auto overflow-x-hidden border border-gray-300 rounded-lg shadow-lg touch-none;
   }
 
   .messages {
-    @apply p-2 sm:p-4 space-y-2;
+    @apply p-2 sm:p-4 space-y-2 touch-none;
   }
 
   .message-wrapper {
-    @apply flex w-full mb-4;
+    @apply flex w-full mb-4 touch-none;
   }
 
   .message-wrapper.received {
@@ -50,7 +50,7 @@ body {
   }
 
   .message-inner {
-    @apply flex flex-col max-w-[85%] sm:max-w-[75%] relative cursor-pointer;
+    @apply flex flex-col max-w-[85%] sm:max-w-[75%] relative cursor-pointer touch-none;
   }
 
   .message-header {

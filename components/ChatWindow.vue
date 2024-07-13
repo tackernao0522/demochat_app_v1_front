@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick, onMounted, onUpdated } from 'vue'
+import { ref, watch, nextTick, onMounted, onUpdated, onBeforeUnmount } from 'vue'
 import { useNuxtApp } from '#app'
 import { useCookiesAuth } from '../composables/useCookiesAuth'
 import debounce from 'lodash/debounce'
@@ -123,6 +123,12 @@ const handleTouch = (message) => {
     lastTapTime = currentTime;
 }
 
+const preventZoom = (event) => {
+    if (event.touches.length > 1) {
+        event.preventDefault();
+    }
+}
+
 watch(() => props.messages, async (newMessages) => {
     console.log('Messages in ChatWindow:', newMessages)
     await nextTick()
@@ -131,6 +137,11 @@ watch(() => props.messages, async (newMessages) => {
 
 onMounted(() => {
     scrollToBottom()
+    document.addEventListener('touchmove', preventZoom, { passive: false });
+})
+
+onBeforeUnmount(() => {
+    document.removeEventListener('touchmove', preventZoom);
 })
 
 onUpdated(() => {
