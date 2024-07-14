@@ -4,23 +4,19 @@
 
 @layer base {
   html {
-    @apply overflow-hidden overscroll-y-none;
+    @apply h-full;
   }
 
   body {
-    @apply bg-bodyBg text-bodyText min-h-screen touch-none fixed w-full h-full overflow-hidden touch-pan-x touch-pan-y;
+    @apply bg-bodyBg text-bodyText min-h-screen;
   }
 
   #__nuxt {
-    @apply absolute inset-0 overflow-y-auto overflow-x-hidden;
+    @apply h-full;
   }
 }
 
 @layer components {
-  .webkit-overflow-scrolling-touch {
-    -webkit-overflow-scrolling: touch;
-  }
-
   .btn-primary {
     @apply bg-bodyBg text-white font-bold border-0 rounded px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm cursor-pointer hover:bg-opacity-90 transition w-full sm:w-auto;
   }
@@ -37,28 +33,21 @@
     @apply space-y-4;
   }
 
-  .chat-room-container {
-    @apply flex flex-col h-screen overflow-hidden;
-  }
-
-  .chat-content {
-    @apply flex-1 overflow-y-auto webkit-overflow-scrolling-touch;
-  }
-
   .chat-container {
     @apply flex flex-col h-[calc(100vh-2rem)] sm:h-[calc(100vh-4rem)] w-full max-w-6xl mx-auto p-2 sm:p-4 bg-white rounded-lg shadow-md mt-2 sm:mt-4;
   }
 
   .chat-window {
-    @apply flex-grow overflow-y-auto overflow-x-hidden border border-gray-300 rounded-lg shadow-lg touch-none;
+    @apply flex-grow overflow-y-auto overflow-x-hidden border border-gray-300 rounded-lg shadow-lg;
+    -webkit-overflow-scrolling: touch;
   }
 
   .messages {
-    @apply p-2 sm:p-4 space-y-2 touch-none;
+    @apply p-2 sm:p-4 space-y-2;
   }
 
   .message-wrapper {
-    @apply flex w-full mb-4 touch-none select-none;
+    @apply flex w-full mb-4;
   }
 
   .message-wrapper.received {
@@ -70,7 +59,7 @@
   }
 
   .message-inner {
-    @apply flex flex-col max-w-[85%] sm:max-w-[75%] relative cursor-pointer touch-none;
+    @apply flex flex-col max-w-[85%] sm:max-w-[75%] relative cursor-pointer;
   }
 
   .message-header {
