@@ -1,5 +1,5 @@
 <template>
-    <nav class="flex flex-col sm:flex-row items-center justify-between p-2 sm:p-4">
+    <nav class="navbar flex flex-col sm:flex-row items-center justify-between p-2 sm:p-4">
         <div class="text-center sm:text-left mb-2 sm:mb-0">
             <p class="text-base sm:text-lg text-gray-700">こんにちは、{{ username }}さん</p>
             <p class="text-xs sm:text-sm text-gray-400">現在、{{ userEmail }}でログイン中です</p>
