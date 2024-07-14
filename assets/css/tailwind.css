@@ -132,4 +132,13 @@ body {
   .new-chat-textarea {
     @apply w-full max-w-full mb-2 p-1 sm:p-2 box-border border-0 rounded-2xl outline-none text-sm sm:text-base;
   }
+
+  @layer base {
+    body,
+    .chat-window,
+    .messages,
+    .message-inner {
+      @apply touch-none;
+    }
+  }
 }
