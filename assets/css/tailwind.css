@@ -3,12 +3,9 @@
 @tailwind utilities;
 
 @layer base {
-  html {
-    @apply h-full;
-  }
-
+  html,
   body {
-    @apply bg-bodyBg text-bodyText min-h-screen;
+    @apply h-full overflow-hidden;
   }
 
   #__nuxt {
@@ -17,12 +14,28 @@
 }
 
 @layer components {
-  .btn-primary {
-    @apply bg-bodyBg text-white font-bold border-0 rounded px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm cursor-pointer hover:bg-opacity-90 transition w-full sm:w-auto;
+  .page-container {
+    @apply flex flex-col h-full overflow-hidden bg-bodyBg;
   }
 
   .form-container {
-    @apply w-full px-4 sm:w-2/3 md:w-1/2 lg:w-1/3 mx-auto text-center sm:px-0;
+    @apply w-full px-4 sm:w-2/3 md:w-1/2 lg:w-1/3 mx-auto my-auto p-6 bg-white rounded-lg shadow-md;
+  }
+
+  .chat-container {
+    @apply flex flex-col h-full w-full max-w-6xl mx-auto bg-white;
+  }
+
+  .chat-window {
+    @apply flex-grow overflow-y-auto overflow-x-hidden;
+  }
+
+  .navbar {
+    @apply bg-gray-100 border-b border-gray-200;
+  }
+
+  .btn-primary {
+    @apply bg-bodyBg text-white font-bold border-0 rounded px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm cursor-pointer hover:bg-opacity-90 transition w-full sm:w-auto;
   }
 
   .form-title {
@@ -31,15 +44,6 @@
 
   .form-layout {
     @apply space-y-4;
-  }
-
-  .chat-container {
-    @apply flex flex-col h-[calc(100vh-2rem)] sm:h-[calc(100vh-4rem)] w-full max-w-6xl mx-auto p-2 sm:p-4 bg-white rounded-lg shadow-md mt-2 sm:mt-4;
-  }
-
-  .chat-window {
-    @apply flex-grow overflow-y-auto overflow-x-hidden border border-gray-300 rounded-lg shadow-lg;
-    -webkit-overflow-scrolling: touch;
   }
 
   .messages {
@@ -135,10 +139,25 @@
   }
 
   .new-chat-form {
-    @apply mt-2 sm:mt-4 w-full px-2 sm:px-4 bg-white border border-gray-300 rounded-lg shadow-md;
+    @apply w-full px-2 sm:px-4 py-2 bg-white border-t border-gray-300;
   }
 
   .new-chat-textarea {
-    @apply w-full max-w-full mb-2 p-1 sm:p-2 box-border border-0 rounded-2xl outline-none text-sm sm:text-base;
+    @apply w-full p-2 border border-gray-300 rounded-lg outline-none text-sm sm:text-base resize-none;
+  }
+
+  /* PC版のみに適用されるスタイル */
+  @media (min-width: 1024px) {
+    .page-container {
+      @apply p-4 bg-bodyBg;
+    }
+
+    .chat-container {
+      @apply rounded-xl shadow-xl max-w-4xl overflow-hidden;
+    }
+
+    .chat-window {
+      @apply bg-white;
+    }
   }
 }
