@@ -12,40 +12,45 @@ onMounted(() => {
     existingMetaTag.remove()
   }
 
-  // metaタグでズームを無効にする
+  // 新しいviewport metaタグを追加
   const metaTag = document.createElement('meta')
   metaTag.name = 'viewport'
   metaTag.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
   document.head.appendChild(metaTag)
 
-  // CSSでズームを無効にする
-  const style = document.createElement('style')
-  style.innerHTML = `
-    body {
-      touch-action: none;
-    }
-  `
-  document.head.appendChild(style)
-
-  // JavaScriptでズームを無効にする
-  const preventZoom = (event) => {
-    // Shift + Enter での改行を許可する
-    if (event.shiftKey && event.key === 'Enter') {
-      return
-    }
-
-    if (event.ctrlKey || event.metaKey || event.key === 'Control' || event.key === 'Meta') {
-      event.preventDefault()
+  // ズームを防止する関数
+  const preventZoom = (e) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault()
     }
   }
 
-  const preventWheelZoom = (event) => {
-    if (event.ctrlKey || event.metaKey) {
-      event.preventDefault()
+  // キーボードイベントでのズーム防止
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '=')) {
+      e.preventDefault()
     }
-  }
+  })
 
-  document.addEventListener('wheel', preventWheelZoom, { passive: false })
-  document.addEventListener('keydown', preventZoom, { passive: false })
+  // マウスホイールでのズーム防止
+  document.addEventListener('wheel', preventZoom, { passive: false })
+
+  // タッチデバイスでのピンチズーム防止
+  document.addEventListener('touchmove', (e) => {
+    if (e.touches.length > 1) {
+      e.preventDefault()
+    }
+  }, { passive: false })
+
+  // ダブルタップによるズームを防止
+  let lastTapTime = 0
+  document.addEventListener('touchend', (e) => {
+    const currentTime = new Date().getTime()
+    const tapLength = currentTime - lastTapTime
+    if (tapLength < 500 && tapLength > 0) {
+      e.preventDefault()
+    }
+    lastTapTime = currentTime
+  }, { passive: false })
 })
 </script>

@@ -2,11 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-bodyBg text-bodyText min-h-screen touch-none;
+@layer base {
+  html {
+    @apply overflow-hidden overscroll-y-none;
+  }
+
+  body {
+    @apply bg-bodyBg text-bodyText min-h-screen touch-none fixed w-full h-full overflow-hidden touch-pan-x touch-pan-y;
+  }
+
+  #__nuxt {
+    @apply absolute inset-0 overflow-y-auto overflow-x-hidden;
+  }
 }
 
 @layer components {
+  .webkit-overflow-scrolling-touch {
+    -webkit-overflow-scrolling: touch;
+  }
+
   .btn-primary {
     @apply bg-bodyBg text-white font-bold border-0 rounded px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm cursor-pointer hover:bg-opacity-90 transition w-full sm:w-auto;
   }
@@ -23,6 +37,14 @@ body {
     @apply space-y-4;
   }
 
+  .chat-room-container {
+    @apply flex flex-col h-screen overflow-hidden;
+  }
+
+  .chat-content {
+    @apply flex-1 overflow-y-auto webkit-overflow-scrolling-touch;
+  }
+
   .chat-container {
     @apply flex flex-col h-[calc(100vh-2rem)] sm:h-[calc(100vh-4rem)] w-full max-w-6xl mx-auto p-2 sm:p-4 bg-white rounded-lg shadow-md mt-2 sm:mt-4;
   }
@@ -36,7 +58,7 @@ body {
   }
 
   .message-wrapper {
-    @apply flex w-full mb-4 touch-none;
+    @apply flex w-full mb-4 touch-none select-none;
   }
 
   .message-wrapper.received {
@@ -129,21 +151,5 @@ body {
 
   .new-chat-textarea {
     @apply w-full max-w-full mb-2 p-1 sm:p-2 box-border border-0 rounded-2xl outline-none text-sm sm:text-base;
-  }
-}
-
-@layer base {
-  body {
-    @apply touch-none;
-  }
-  .chat-window {
-    @apply overflow-y-auto;
-    @apply touch-none;
-  }
-  .messages {
-    @apply touch-none;
-  }
-  .message-inner {
-    @apply touch-none;
   }
 }
