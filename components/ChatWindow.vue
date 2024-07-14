@@ -3,8 +3,8 @@
         <div v-if="props.messages.length" class="messages" ref="messageList">
             <div v-for="message in props.messages" :key="message.id"
                 :class="['message-wrapper', messageClass(message)]">
-                <div class="message-inner" @touchstart="handleTouchStart($event, message)"
-                    @touchend="handleTouchEnd($event, message)">
+                <div class="message-inner" @click="handleClick(message)" @dblclick="handleDoubleClick(message)"
+                    @touchstart="handleTouchStart($event, message)" @touchend="handleTouchEnd($event, message)">
                     <div class="message-header">
                         <span class="name">{{ message.name }}</span>
                         <span class="created-at">{{ formatDate(message.created_at) }}</span>
@@ -51,6 +51,7 @@ const chatContainer = ref(null)
 const messageList = ref(null)
 let lastTapTime = 0
 let touchStartTime = 0
+let isTouchDevice = false
 
 const messageClass = (message) => {
     const authData = getAuthData();
@@ -114,7 +115,20 @@ const createLike = debounce(async (message) => {
     }
 }, 300);
 
+const handleClick = (message) => {
+    if (!isTouchDevice) {
+        createLike(message);
+    }
+}
+
+const handleDoubleClick = (message) => {
+    if (!isTouchDevice) {
+        createLike(message);
+    }
+}
+
 const handleTouchStart = (event, message) => {
+    isTouchDevice = true;
     touchStartTime = new Date().getTime();
 }
 
@@ -127,6 +141,9 @@ const handleTouchEnd = (event, message) => {
         const tapLength = currentTime - lastTapTime;
         if (tapLength < 300 && tapLength > 0) {
             // ダブルタップとみなす
+            createLike(message);
+        } else {
+            // シングルタップとみなす
             createLike(message);
         }
         lastTapTime = currentTime;

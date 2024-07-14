@@ -18,21 +18,39 @@ onMounted(() => {
   metaTag.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
   document.head.appendChild(metaTag)
 
-  // PCでのズームを防止する関数
+  // ズームを防止する関数
   const preventZoom = (e) => {
-    if (e.ctrlKey || e.metaKey) {
+    if (e.touches.length > 1) {
       e.preventDefault()
     }
   }
 
-  // キーボードイベントでのズーム防止
+  // タッチ操作でのズーム防止
+  document.addEventListener('touchmove', preventZoom, { passive: false })
+  document.addEventListener('touchstart', preventZoom, { passive: false })
+
+  // ダブルタップによるズームを防止
+  let lastTapTime = 0
+  document.addEventListener('touchend', (e) => {
+    const currentTime = new Date().getTime()
+    const tapLength = currentTime - lastTapTime
+    if (tapLength < 500 && tapLength > 0) {
+      e.preventDefault()
+    }
+    lastTapTime = currentTime
+  }, { passive: false })
+
+  // PCでのズームを防止
+  document.addEventListener('wheel', (e) => {
+    if (e.ctrlKey) {
+      e.preventDefault()
+    }
+  }, { passive: false })
+
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '=')) {
       e.preventDefault()
     }
   })
-
-  // マウスホイールでのズーム防止
-  document.addEventListener('wheel', preventZoom, { passive: false })
 })
 </script>
