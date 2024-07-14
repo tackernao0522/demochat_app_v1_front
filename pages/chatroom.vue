@@ -1,11 +1,9 @@
 <template>
     <client-only>
-        <div class="min-h-screen bg-bodyBg text-bodyText flex flex-col items-center">
-            <div class="chat-container">
-                <Navbar :username="username" :userEmail="userEmail" />
-                <ChatWindow :messages="messages" @updateMessages="updateMessages" />
-                <NewChatForm @newMessage="sendMessage" />
-            </div>
+        <div class="chat-container">
+            <Navbar :username="username" :userEmail="userEmail" />
+            <ChatWindow :messages="messages" @updateMessages="updateMessages" />
+            <NewChatForm @newMessage="sendMessage" />
         </div>
     </client-only>
 </template>

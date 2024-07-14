@@ -3,8 +3,7 @@
         <div v-if="props.messages.length" class="messages" ref="messageList">
             <div v-for="message in props.messages" :key="message.id"
                 :class="['message-wrapper', messageClass(message)]">
-                <div class="message-inner cursor-pointer" @dblclick="createLike(message)"
-                    @touchend="handleTouch(message)">
+                <div class="message-inner" @click="handleMessageClick(message)">
                     <div class="message-header">
                         <span class="name">{{ message.name }}</span>
                         <span class="created-at">{{ formatDate(message.created_at) }}</span>
@@ -113,20 +112,14 @@ const createLike = debounce(async (message) => {
     }
 }, 300);
 
-const handleTouch = (message) => {
+const handleMessageClick = (message) => {
     const currentTime = new Date().getTime();
     const tapLength = currentTime - lastTapTime;
-    if (tapLength < 500 && tapLength > 0) {
+    if (tapLength < 300 && tapLength > 0) {
         // ダブルタップとみなす
         createLike(message);
     }
     lastTapTime = currentTime;
-}
-
-const preventZoom = (event) => {
-    if (event.touches.length > 1) {
-        event.preventDefault();
-    }
 }
 
 watch(() => props.messages, async (newMessages) => {
@@ -137,11 +130,6 @@ watch(() => props.messages, async (newMessages) => {
 
 onMounted(() => {
     scrollToBottom()
-    document.addEventListener('touchmove', preventZoom, { passive: false });
-})
-
-onBeforeUnmount(() => {
-    document.removeEventListener('touchmove', preventZoom);
 })
 
 onUpdated(() => {
