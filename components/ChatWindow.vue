@@ -129,12 +129,6 @@ const preventZoom = (event) => {
     }
 }
 
-const preventDoubleTapZoom = (event) => {
-    if (event.touches.length > 1 || (event.touches.length === 1 && event.timeStamp - lastTapTime < 500)) {
-        event.preventDefault();
-    }
-}
-
 watch(() => props.messages, async (newMessages) => {
     console.log('Messages in ChatWindow:', newMessages)
     await nextTick()
@@ -144,12 +138,10 @@ watch(() => props.messages, async (newMessages) => {
 onMounted(() => {
     scrollToBottom()
     document.addEventListener('touchmove', preventZoom, { passive: false });
-    document.addEventListener('touchend', preventDoubleTapZoom, { passive: false });
 })
 
 onBeforeUnmount(() => {
     document.removeEventListener('touchmove', preventZoom);
-    document.removeEventListener('touchend', preventDoubleTapZoom);
 })
 
 onUpdated(() => {
