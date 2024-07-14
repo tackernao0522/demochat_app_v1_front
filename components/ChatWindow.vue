@@ -3,7 +3,8 @@
         <div v-if="props.messages.length" class="messages" ref="messageList">
             <div v-for="message in props.messages" :key="message.id"
                 :class="['message-wrapper', messageClass(message)]">
-                <div class="message-inner" @click="handleMessageClick(message)">
+                <div class="message-inner" @touchstart="handleTouchStart($event, message)"
+                    @touchend="handleTouchEnd($event, message)">
                     <div class="message-header">
                         <span class="name">{{ message.name }}</span>
                         <span class="created-at">{{ formatDate(message.created_at) }}</span>
@@ -29,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick, onMounted, onUpdated, onBeforeUnmount } from 'vue'
+import { ref, watch, nextTick, onMounted, onUpdated } from 'vue'
 import { useNuxtApp } from '#app'
 import { useCookiesAuth } from '../composables/useCookiesAuth'
 import debounce from 'lodash/debounce'
@@ -49,6 +50,7 @@ const { getAuthData } = useCookiesAuth()
 const chatContainer = ref(null)
 const messageList = ref(null)
 let lastTapTime = 0
+let touchStartTime = 0
 
 const messageClass = (message) => {
     const authData = getAuthData();
@@ -112,14 +114,23 @@ const createLike = debounce(async (message) => {
     }
 }, 300);
 
-const handleMessageClick = (message) => {
-    const currentTime = new Date().getTime();
-    const tapLength = currentTime - lastTapTime;
-    if (tapLength < 300 && tapLength > 0) {
-        // ダブルタップとみなす
-        createLike(message);
+const handleTouchStart = (event, message) => {
+    touchStartTime = new Date().getTime();
+}
+
+const handleTouchEnd = (event, message) => {
+    const touchEndTime = new Date().getTime();
+    const touchDuration = touchEndTime - touchStartTime;
+
+    if (touchDuration < 300) {
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTapTime;
+        if (tapLength < 300 && tapLength > 0) {
+            // ダブルタップとみなす
+            createLike(message);
+        }
+        lastTapTime = currentTime;
     }
-    lastTapTime = currentTime;
 }
 
 watch(() => props.messages, async (newMessages) => {
