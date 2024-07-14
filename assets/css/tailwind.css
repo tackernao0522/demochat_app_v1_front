@@ -51,15 +51,15 @@
   }
 
   .message-wrapper {
-    @apply flex w-full mb-4;
+    @apply flex flex-col w-full mb-4;
   }
 
   .message-wrapper.received {
-    @apply justify-start;
+    @apply items-start;
   }
 
   .message-wrapper.sent {
-    @apply justify-end;
+    @apply items-end;
   }
 
   .message-inner {
@@ -67,7 +67,7 @@
   }
 
   .message-header {
-    @apply flex justify-between items-center mb-1 px-2;
+    @apply flex items-center mb-1 px-2;
   }
 
   .message-content-wrapper {
@@ -86,7 +86,7 @@
   }
 
   .name {
-    @apply text-xs sm:text-sm font-bold mr-2;
+    @apply text-xs sm:text-sm font-bold;
   }
 
   .message-content {
@@ -135,29 +135,37 @@
   }
 
   .created-at {
-    @apply text-gray-500 text-[10px] sm:text-xs;
+    @apply text-gray-500 text-[10px] sm:text-xs mt-1;
   }
 
   .new-chat-form {
-    @apply w-full px-2 sm:px-4 py-2 bg-white border-t border-gray-300;
+    @apply w-full px-2 sm:px-4 py-2 bg-white border-t border-gray-200 relative;
   }
 
   .new-chat-textarea {
-    @apply w-full p-2 border border-gray-300 rounded-lg outline-none text-sm sm:text-base resize-none;
+    @apply w-full py-2 pl-3 pr-12 border border-gray-300 rounded-lg outline-none text-sm sm:text-base resize-none;
+    min-height: 40px;
+    max-height: 120px;
+    overflow-y: auto;
   }
 
-  /* PC版のみに適用されるスタイル */
-  @media (min-width: 1024px) {
-    .page-container {
-      @apply p-4 bg-bodyBg;
-    }
+  .send-button {
+    @apply absolute right-6 bg-blue-500 text-white rounded-full p-1.5 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 flex items-center justify-center z-10;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
 
-    .chat-container {
-      @apply rounded-xl shadow-xl max-w-4xl overflow-hidden;
-    }
+@media (min-width: 1024px) {
+  .page-container {
+    @apply p-4 bg-bodyBg;
+  }
 
-    .chat-window {
-      @apply bg-white;
-    }
+  .chat-container {
+    @apply rounded-xl shadow-xl max-w-4xl overflow-hidden;
+  }
+
+  .chat-window {
+    @apply bg-white;
   }
 }

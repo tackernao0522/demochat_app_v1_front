@@ -7,14 +7,13 @@
                     @touchstart="handleTouchStart($event, message)" @touchend="handleTouchEnd($event, message)">
                     <div class="message-header">
                         <span class="name">{{ message.name }}</span>
-                        <span class="created-at">{{ formatDate(message.created_at) }}</span>
                     </div>
                     <div class="message-content-wrapper">
                         <span class="message-content">{{ message.content || '(空のメッセージ)' }}</span>
                         <div class="like-container group" v-if="message.likes && message.likes.length > 0">
-                            <div class="like-button" @click.stop="handleLikeClick(message)">
+                            <div class="like-button">
                                 <font-awesome-icon :icon="['fas', 'heart']"
-                                    class="heart-icon text-red-500 cursor-pointer" />
+                                    class="heart-icon text-red-500 cursor-pointer" @click.stop="createLike(message)" />
                                 <span class="like-count">{{ message.likes.length }}</span>
                             </div>
                             <div class="chat-tooltip">
@@ -23,6 +22,7 @@
                         </div>
                     </div>
                 </div>
+                <span class="created-at">{{ formatDate(message.created_at) }}</span>
             </div>
         </div>
         <div v-else class="text-gray-500">メッセージがありません。</div>
@@ -137,10 +137,6 @@ const handleTouchEnd = (event, message) => {
     }
 }
 
-const handleLikeClick = (message) => {
-    createLike(message);
-}
-
 watch(() => props.messages, async (newMessages) => {
     console.log('Messages in ChatWindow:', newMessages)
     await nextTick()
@@ -155,3 +151,28 @@ onUpdated(() => {
     scrollToBottom()
 })
 </script>
+
+<style scoped>
+.message-wrapper {
+    @apply flex flex-col w-full mb-4;
+}
+
+.message-inner {
+    @apply flex flex-col max-w-[85%] sm:max-w-[75%] relative cursor-pointer;
+}
+
+.message-content-wrapper {
+    @apply p-2 sm:p-3 rounded-3xl inline-block relative;
+    width: fit-content;
+    max-width: 100%;
+    word-wrap: break-word;
+}
+
+.created-at {
+    @apply text-gray-500 text-[10px] sm:text-xs mt-2 mb-1;
+}
+
+.like-container {
+    @apply absolute bottom-0 right-1 transform translate-y-1/2;
+}
+</style>
