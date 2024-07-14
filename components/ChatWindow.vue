@@ -3,7 +3,7 @@
         <div v-if="props.messages.length" class="messages" ref="messageList">
             <div v-for="message in props.messages" :key="message.id"
                 :class="['message-wrapper', messageClass(message)]">
-                <div class="message-inner" @click="handleClick(message)" @dblclick="handleDoubleClick(message)"
+                <div class="message-inner" @dblclick="handleDoubleClick(message)"
                     @touchstart="handleTouchStart($event, message)" @touchend="handleTouchEnd($event, message)">
                     <div class="message-header">
                         <span class="name">{{ message.name }}</span>
@@ -12,9 +12,9 @@
                     <div class="message-content-wrapper">
                         <span class="message-content">{{ message.content || '(空のメッセージ)' }}</span>
                         <div class="like-container group" v-if="message.likes && message.likes.length > 0">
-                            <div class="like-button">
+                            <div class="like-button" @click.stop="handleLikeClick(message)">
                                 <font-awesome-icon :icon="['fas', 'heart']"
-                                    class="heart-icon text-red-500 cursor-pointer" @click.stop="createLike(message)" />
+                                    class="heart-icon text-red-500 cursor-pointer" />
                                 <span class="like-count">{{ message.likes.length }}</span>
                             </div>
                             <div class="chat-tooltip">
@@ -51,7 +51,6 @@ const chatContainer = ref(null)
 const messageList = ref(null)
 let lastTapTime = 0
 let touchStartTime = 0
-let isTouchDevice = false
 
 const messageClass = (message) => {
     const authData = getAuthData();
@@ -115,20 +114,11 @@ const createLike = debounce(async (message) => {
     }
 }, 300);
 
-const handleClick = (message) => {
-    if (!isTouchDevice) {
-        createLike(message);
-    }
-}
-
 const handleDoubleClick = (message) => {
-    if (!isTouchDevice) {
-        createLike(message);
-    }
+    createLike(message);
 }
 
 const handleTouchStart = (event, message) => {
-    isTouchDevice = true;
     touchStartTime = new Date().getTime();
 }
 
@@ -142,12 +132,13 @@ const handleTouchEnd = (event, message) => {
         if (tapLength < 300 && tapLength > 0) {
             // ダブルタップとみなす
             createLike(message);
-        } else {
-            // シングルタップとみなす
-            createLike(message);
         }
         lastTapTime = currentTime;
     }
+}
+
+const handleLikeClick = (message) => {
+    createLike(message);
 }
 
 watch(() => props.messages, async (newMessages) => {
