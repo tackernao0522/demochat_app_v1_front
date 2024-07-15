@@ -151,28 +151,3 @@ onUpdated(() => {
     scrollToBottom()
 })
 </script>
-
-<style scoped>
-.message-wrapper {
-    @apply flex flex-col w-full mb-4;
-}
-
-.message-inner {
-    @apply flex flex-col max-w-[85%] sm:max-w-[75%] relative cursor-pointer;
-}
-
-.message-content-wrapper {
-    @apply p-2 sm:p-3 rounded-3xl inline-block relative;
-    width: fit-content;
-    max-width: 100%;
-    word-wrap: break-word;
-}
-
-.created-at {
-    @apply text-gray-500 text-[10px] sm:text-xs mt-2 mb-1;
-}
-
-.like-container {
-    @apply absolute bottom-0 right-1 transform translate-y-1/2;
-}
-</style>
