@@ -34,6 +34,8 @@ import { ref, watch, nextTick, onMounted, onUpdated } from 'vue'
 import { useNuxtApp } from '#app'
 import { useCookiesAuth } from '../composables/useCookiesAuth'
 import debounce from 'lodash/debounce'
+import { formatDistanceToNow } from 'date-fns'
+import { ja } from 'date-fns/locale'
 
 const props = defineProps({
     messages: {
@@ -58,8 +60,7 @@ const messageClass = (message) => {
 }
 
 const formatDate = (dateString) => {
-    const date = new Date(dateString)
-    return date.toLocaleString('ja-JP')
+    return formatDistanceToNow(new Date(dateString), { addSuffix: true, locale: ja })
 }
 
 const scrollToBottom = () => {
