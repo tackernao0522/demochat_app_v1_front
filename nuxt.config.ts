@@ -29,8 +29,8 @@ export default defineNuxtConfig({
       nodeEnv: process.env.NODE_ENV || "development",
       logLevel: process.env.LOG_LEVEL || "debug",
     },
-    basicAuthUser: process.env.BASIC_AUTH_USER,
-    basicAuthPassword: process.env.BASIC_AUTH_PASSWORD,
+    basicAuthUser: process.env.BASIC_AUTH_USER || "",
+    basicAuthPassword: process.env.BASIC_AUTH_PASSWORD || "",
   },
   router: {
     middleware: ["basic-auth"],
@@ -41,8 +41,16 @@ export default defineNuxtConfig({
   },
   hooks: {
     ready: () => {
-      console.log("BASIC_AUTH_USER:", process.env.BASIC_AUTH_USER);
-      console.log("BASIC_AUTH_PASSWORD:", process.env.BASIC_AUTH_PASSWORD);
+      if (process.env.NODE_ENV === "production") {
+        if (!process.env.BASIC_AUTH_USER || !process.env.BASIC_AUTH_PASSWORD) {
+          console.error(
+            "Basic Auth credentials are not set in production environment"
+          );
+        } else {
+          console.log("Basic Auth User:", process.env.BASIC_AUTH_USER);
+          console.log("Basic Auth Password:", process.env.BASIC_AUTH_PASSWORD);
+        }
+      }
     },
   },
 });
