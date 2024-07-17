@@ -1,4 +1,4 @@
-import { defineNuxtRouteMiddleware } from "nuxt/app";
+import { defineNuxtRouteMiddleware, useRuntimeConfig } from "nuxt/app";
 
 export default defineNuxtRouteMiddleware((to, from, next) => {
   console.log("Basic Auth: Middleware invoked");
