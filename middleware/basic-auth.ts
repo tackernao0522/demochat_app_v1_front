@@ -1,6 +1,6 @@
-export default defineNuxtRouteMiddleware((to, from, next) => {
+export default defineNuxtRouteMiddleware((to, from) => {
   if (process.env.NODE_ENV !== "production" || !process.server) {
-    return next();
+    return;
   }
 
   const runtimeConfig = useRuntimeConfig();
@@ -15,7 +15,7 @@ export default defineNuxtRouteMiddleware((to, from, next) => {
     .split(":");
 
   if (login && password && login === auth.login && password === auth.password) {
-    return next();
+    return;
   }
 
   to.res.statusCode = 401;
