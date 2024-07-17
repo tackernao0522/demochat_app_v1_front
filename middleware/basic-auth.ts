@@ -36,6 +36,8 @@ export default defineEventHandler((event: H3Event) => {
   }
 
   console.log("Basic Auth successful");
+  // 明示的にundefinedを返す
+  return;
 });
 
 function sendUnauthorized(event: H3Event) {

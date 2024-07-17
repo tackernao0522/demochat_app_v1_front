@@ -42,7 +42,4 @@ export default defineNuxtConfig({
   nitro: {
     preset: "vercel",
   },
-  serverMiddleware: [
-    { path: "/", handler: "~/server/middleware/basic-auth.ts" },
-  ],
 });
