@@ -1,3 +1,5 @@
+import { defineNuxtRouteMiddleware, useRuntimeConfig } from "nuxt/app";
+
 export default defineNuxtRouteMiddleware((to, from, next) => {
   console.log("Middleware triggered");
 
