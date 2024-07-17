@@ -29,6 +29,11 @@ export default defineNuxtConfig({
       nodeEnv: process.env.NODE_ENV || "development",
       logLevel: process.env.LOG_LEVEL || "debug",
     },
+    basicAuthUser: process.env.BASIC_AUTH_USER,
+    basicAuthPassword: process.env.BASIC_AUTH_PASSWORD,
+  },
+  router: {
+    middleware: ["basic-auth"], // 修正: moddleware -> middleware
   },
   devServer: {
     port: parseInt(process.env.FRONT_PORT || "8080"),
