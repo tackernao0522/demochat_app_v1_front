@@ -1,20 +1,24 @@
-import { defineNuxtRouteMiddleware, useRuntimeConfig } from "#app";
-import { useRequestHeaders } from "h3";
+import {
+  defineNuxtRouteMiddleware,
+  useRuntimeConfig,
+  useRequestHeaders,
+} from "#app";
 
 export default defineNuxtRouteMiddleware((to, from) => {
   if (process.server && process.env.NODE_ENV === "production") {
     const config = useRuntimeConfig();
 
-    const auth = useRequestHeaders(["authorization"]);
+    // TypeScript型チェックを追加
+    const headers = useRequestHeaders() as { authorization?: string };
 
-    if (!auth.authorization) {
+    if (!headers.authorization) {
       return {
         status: 401,
         headers: { "WWW-Authenticate": 'Basic realm="Secure Area"' },
       };
     }
 
-    const [, base64Credentials] = auth.authorization.split(" ");
+    const [, base64Credentials] = headers.authorization.split(" ");
     const credentials = Buffer.from(base64Credentials, "base64").toString(
       "utf-8"
     );
