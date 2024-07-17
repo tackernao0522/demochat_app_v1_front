@@ -1,9 +1,11 @@
-export default defineNuxtRouteMiddleware((to, from) => {
+export default defineNuxtRouteMiddleware((to, from, next) => {
+  console.log("Middleware triggered");
+
   if (process.env.NODE_ENV !== "production" || !process.server) {
     console.log(
       "Skipping basic auth in non-production environment or client-side"
     );
-    return;
+    return next();
   }
 
   const runtimeConfig = useRuntimeConfig();
@@ -25,7 +27,7 @@ export default defineNuxtRouteMiddleware((to, from) => {
 
   if (login && password && login === auth.login && password === auth.password) {
     console.log("Authentication successful");
-    return;
+    return next();
   }
 
   console.log("Authentication failed");
