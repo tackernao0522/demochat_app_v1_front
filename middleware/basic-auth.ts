@@ -1,46 +1,28 @@
-import { defineNuxtRouteMiddleware, useRuntimeConfig } from "nuxt/app";
+import { defineEventHandler, getHeader } from "h3";
 
-export default defineNuxtRouteMiddleware((to, from, next) => {
-  console.log("Basic Auth: Middleware invoked");
+export default defineEventHandler((event) => {
+  const auth = getHeader(event, "authorization");
 
-  const runtimeConfig = useRuntimeConfig();
-  const user = runtimeConfig.basicAuthUser;
-  const pass = runtimeConfig.basicAuthPassword;
-
-  console.log(`Basic Auth: Configured user ${user}, password ${pass}`);
-
-  if (!user || !pass) {
-    console.log("Basic Auth: No user or password set");
-    return next();
+  if (!auth || auth.indexOf("Basic ") === -1) {
+    event.node.res.setHeader("WWW-Authenticate", 'Basic realm="example"');
+    event.node.res.statusCode = 401;
+    event.node.res.end("Unauthorized");
+    return;
   }
 
-  if (process.server && to.req) {
-    console.log("Basic Auth: Server-side middleware");
-    const auth = { login: user, password: pass };
+  const base64Credentials = auth.split(" ")[1];
+  const credentials = Buffer.from(base64Credentials, "base64").toString(
+    "ascii"
+  );
+  const [username, password] = credentials.split(":");
 
-    const b64auth = (to.req.headers.authorization || "").split(" ")[1] || "";
-    const [login, password] = Buffer.from(b64auth, "base64")
-      .toString()
-      .split(":");
+  const validUsername = process.env.BASIC_AUTH_USER;
+  const validPassword = process.env.BASIC_AUTH_PASSWORD;
 
-    console.log(`Basic Auth: Provided login ${login}, password ${password}`);
-
-    if (
-      login &&
-      password &&
-      login === auth.login &&
-      password === auth.password
-    ) {
-      console.log("Basic Auth: Authentication successful");
-      return next();
-    }
-
-    console.log("Basic Auth: Authentication failed");
-    to.res.statusCode = 401;
-    to.res.setHeader("WWW-Authenticate", 'Basic realm="401"');
-    to.res.end("Unauthorized");
-  } else {
-    console.log("Basic Auth: Client-side middleware");
-    next();
+  if (username !== validUsername || password !== validPassword) {
+    event.node.res.setHeader("WWW-Authenticate", 'Basic realm="example"');
+    event.node.res.statusCode = 401;
+    event.node.res.end("Unauthorized");
+    return;
   }
 });

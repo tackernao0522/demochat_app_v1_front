@@ -39,4 +39,9 @@ export default defineNuxtConfig({
     port: parseInt(process.env.FRONT_PORT || "8080"),
     host: "0.0.0.0",
   },
+  nitro: {
+    routeRules: {
+      "/**": { middleware: "basic-auth" },
+    },
+  },
 });
