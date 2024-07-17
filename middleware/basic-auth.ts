@@ -1,14 +1,11 @@
-export default defineNuxtRouteMiddleware((to, from) => {
+export default defineNuxtRouteMiddleware((to, from, next) => {
   if (process.env.NODE_ENV !== "production" || !process.server) {
-    return;
+    return next();
   }
 
   const runtimeConfig = useRuntimeConfig();
   const user = runtimeConfig.basicAuthUser;
   const pass = runtimeConfig.basicAuthPassword;
-
-  console.log("Basic Auth User:", user);
-  console.log("Basic Auth Password:", pass);
 
   const auth = { login: user, password: pass };
 
@@ -18,7 +15,7 @@ export default defineNuxtRouteMiddleware((to, from) => {
     .split(":");
 
   if (login && password && login === auth.login && password === auth.password) {
-    return;
+    return next();
   }
 
   to.res.statusCode = 401;

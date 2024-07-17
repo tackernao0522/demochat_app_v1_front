@@ -29,20 +29,14 @@ export default defineNuxtConfig({
       nodeEnv: process.env.NODE_ENV || "development",
       logLevel: process.env.LOG_LEVEL || "debug",
     },
-    basicAuthUser: process.env.BASIC_AUTH_USER,
-    basicAuthPassword: process.env.BASIC_AUTH_PASSWORD,
+    basicAuthUser: process.env.BASIC_AUTH_USER || "",
+    basicAuthPassword: process.env.BASIC_AUTH_PASSWORD || "",
   },
   router: {
-    middleware: ["basic-auth"],
+    middleware: process.env.NODE_ENV === "production" ? ["basic-auth"] : [],
   },
   devServer: {
     port: parseInt(process.env.FRONT_PORT || "8080"),
     host: "0.0.0.0",
-  },
-  hooks: {
-    ready: () => {
-      console.log("BASIC_AUTH_USER:", process.env.BASIC_AUTH_USER);
-      console.log("BASIC_AUTH_PASSWORD:", process.env.BASIC_AUTH_PASSWORD);
-    },
   },
 });
