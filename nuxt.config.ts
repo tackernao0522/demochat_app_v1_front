@@ -33,7 +33,7 @@ export default defineNuxtConfig({
     basicAuthPassword: process.env.BASIC_AUTH_PASSWORD || "",
   },
   router: {
-    middleware: process.env.NODE_ENV === "production" ? ["basic-auth"] : [],
+    middleware: ["basic-auth"],
   },
   devServer: {
     port: parseInt(process.env.FRONT_PORT || "8080"),

@@ -1,24 +1,46 @@
-export default defineNuxtRouteMiddleware((to, from) => {
-  if (process.env.NODE_ENV !== "production" || !process.server) {
-    return;
-  }
+import { defineNuxtRouteMiddleware } from "nuxt/app";
+
+export default defineNuxtRouteMiddleware((to, from, next) => {
+  console.log("Basic Auth: Middleware invoked");
 
   const runtimeConfig = useRuntimeConfig();
   const user = runtimeConfig.basicAuthUser;
   const pass = runtimeConfig.basicAuthPassword;
 
-  const auth = { login: user, password: pass };
+  console.log(`Basic Auth: Configured user ${user}, password ${pass}`);
 
-  const b64auth = (to.req.headers.authorization || "").split(" ")[1] || "";
-  const [login, password] = Buffer.from(b64auth, "base64")
-    .toString()
-    .split(":");
-
-  if (login && password && login === auth.login && password === auth.password) {
-    return;
+  if (!user || !pass) {
+    console.log("Basic Auth: No user or password set");
+    return next();
   }
 
-  to.res.statusCode = 401;
-  to.res.setHeader("WWW-Authenticate", 'Basic realm="401"');
-  to.res.end("Unauthorized");
+  if (process.server && to.req) {
+    console.log("Basic Auth: Server-side middleware");
+    const auth = { login: user, password: pass };
+
+    const b64auth = (to.req.headers.authorization || "").split(" ")[1] || "";
+    const [login, password] = Buffer.from(b64auth, "base64")
+      .toString()
+      .split(":");
+
+    console.log(`Basic Auth: Provided login ${login}, password ${password}`);
+
+    if (
+      login &&
+      password &&
+      login === auth.login &&
+      password === auth.password
+    ) {
+      console.log("Basic Auth: Authentication successful");
+      return next();
+    }
+
+    console.log("Basic Auth: Authentication failed");
+    to.res.statusCode = 401;
+    to.res.setHeader("WWW-Authenticate", 'Basic realm="401"');
+    to.res.end("Unauthorized");
+  } else {
+    console.log("Basic Auth: Client-side middleware");
+    next();
+  }
 });
