@@ -23,8 +23,6 @@ export default defineNuxtConfig({
     },
   },
   runtimeConfig: {
-    BASIC_AUTH_USERNAME: process.env.BASIC_AUTH_USERNAME,
-    BASIC_AUTH_PASSWORD: process.env.BASIC_AUTH_PASSWORD,
     public: {
       NUXT_ENV_ENCRYPTION_KEY: process.env.NUXT_ENV_ENCRYPTION_KEY || "",
       apiUrl: process.env.API_URL || "https://demochat-api.fly.dev",
