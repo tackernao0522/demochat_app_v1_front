@@ -1,13 +1,18 @@
-import { defineEventHandler, getHeader } from "h3";
+import { defineEventHandler, getHeader, H3Event } from "h3";
+import { useRuntimeConfig } from "#imports";
 
-export default defineEventHandler((event) => {
+export default defineEventHandler((event: H3Event) => {
+  const config = useRuntimeConfig();
+
+  // 本番環境でのみBasic認証を適用
+  if (process.env.NODE_ENV !== "production") {
+    return;
+  }
+
   const auth = getHeader(event, "authorization");
 
   if (!auth || auth.indexOf("Basic ") === -1) {
-    event.node.res.setHeader("WWW-Authenticate", 'Basic realm="example"');
-    event.node.res.statusCode = 401;
-    event.node.res.end("Unauthorized");
-    return;
+    return sendUnauthorized(event);
   }
 
   const base64Credentials = auth.split(" ")[1];
@@ -16,13 +21,19 @@ export default defineEventHandler((event) => {
   );
   const [username, password] = credentials.split(":");
 
-  const validUsername = process.env.BASIC_AUTH_USER;
-  const validPassword = process.env.BASIC_AUTH_PASSWORD;
+  const validUsername = config.basicAuthUser;
+  const validPassword = config.basicAuthPassword;
 
   if (username !== validUsername || password !== validPassword) {
-    event.node.res.setHeader("WWW-Authenticate", 'Basic realm="example"');
-    event.node.res.statusCode = 401;
-    event.node.res.end("Unauthorized");
-    return;
+    return sendUnauthorized(event);
   }
+
+  // 認証成功の場合は明示的にundefinedを返す
+  return;
 });
+
+function sendUnauthorized(event: H3Event) {
+  event.node.res.setHeader("WWW-Authenticate", 'Basic realm="Secure Area"');
+  event.node.res.statusCode = 401;
+  event.node.res.end("Unauthorized");
+}
