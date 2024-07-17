@@ -12,6 +12,11 @@ export default defineNuxtRouteMiddleware((to, from, next) => {
   const user = runtimeConfig.basicAuthUser;
   const pass = runtimeConfig.basicAuthPassword;
 
+  if (!user || !pass) {
+    console.log("Skipping basic auth due to missing credentials");
+    return next();
+  }
+
   console.log("Basic Auth User:", user);
   console.log("Basic Auth Password:", pass);
 
