@@ -33,11 +33,16 @@ export default defineNuxtConfig({
     },
   },
   routeRules: {
-    "/": { middleware: ["basic-auth"] },
     "/**": { middleware: ["basic-auth"] },
   },
   devServer: {
     port: parseInt(process.env.FRONT_PORT || "8080"),
     host: "0.0.0.0",
   },
+  nitro: {
+    preset: "vercel",
+  },
+  serverMiddleware: [
+    { path: "/", handler: "~/server/middleware/basic-auth.ts" },
+  ],
 });
