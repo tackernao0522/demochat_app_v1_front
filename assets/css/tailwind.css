@@ -162,9 +162,13 @@
   }
 }
 
+/* カスタムクラス */
 @media screen and (orientation: landscape) {
   .landscape-body {
-    @apply rotate-90 transform-origin-left-top absolute hidden overflow-x-hidden;
+    transform: rotate(90deg);
+    transform-origin: left top;
+    position: absolute;
+    overflow-x: hidden;
     width: 100vh;
     height: 100vw;
   }
@@ -172,7 +176,10 @@
 
 @media screen and (orientation: portrait) {
   .portrait-body {
-    @apply relative block overflow-x-auto;
+    transform: none;
+    transform-origin: initial;
+    position: static;
+    overflow-x: visible;
     width: 100%;
     height: 100%;
   }

@@ -49,10 +49,13 @@ onMounted(() => {
 
   const handleOrientationChange = () => {
     const bodyClassList = document.body.classList;
+    console.log('Orientation changed:', window.orientation);
     if (window.orientation === 90 || window.orientation === -90) {
+      console.log('Switching to landscape mode');
       bodyClassList.remove('portrait-body');
       bodyClassList.add('landscape-body');
     } else {
+      console.log('Switching to portrait mode');
       bodyClassList.remove('landscape-body');
       bodyClassList.add('portrait-body');
     }
