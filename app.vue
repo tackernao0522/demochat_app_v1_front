@@ -52,5 +52,33 @@ onMounted(() => {
       e.preventDefault()
     }
   })
+
+  // 向き変更の監視と強制縦向き表示
+  const handleOrientationChange = () => {
+    if (window.orientation === 90 || window.orientation === -90) {
+      document.body.style.transform = "rotate(90deg)";
+      document.body.style.transformOrigin = "left top";
+      document.body.style.width = "100vh";
+      document.body.style.height = "100vw";
+      document.body.style.overflowX = "hidden";
+      document.body.style.position = "absolute";
+      document.body.style.top = "100%";
+      document.body.style.left = "0";
+    } else {
+      document.body.style.transform = "rotate(0deg)";
+      document.body.style.transformOrigin = "initial";
+      document.body.style.width = "initial";
+      document.body.style.height = "initial";
+      document.body.style.overflowX = "initial";
+      document.body.style.position = "initial";
+      document.body.style.top = "initial";
+      document.body.style.left = "initial";
+    }
+  }
+
+  // 初期チェック
+  handleOrientationChange();
+
+  window.addEventListener("orientationchange", handleOrientationChange);
 })
 </script>
