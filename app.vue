@@ -6,25 +6,30 @@
 import { onMounted } from 'vue'
 
 onMounted(() => {
+  // 既存のviewport metaタグを削除（もしあれば）
   const existingMetaTag = document.querySelector('meta[name="viewport"]')
   if (existingMetaTag) {
     existingMetaTag.remove()
   }
 
+  // 新しいviewport metaタグを追加
   const metaTag = document.createElement('meta')
   metaTag.name = 'viewport'
   metaTag.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
   document.head.appendChild(metaTag)
 
+  // ズームを防止する関数
   const preventZoom = (e) => {
     if (e.touches.length > 1) {
       e.preventDefault()
     }
   }
 
+  // タッチ操作でのズーム防止
   document.addEventListener('touchmove', preventZoom, { passive: false })
   document.addEventListener('touchstart', preventZoom, { passive: false })
 
+  // ダブルタップによるズームを防止
   let lastTapTime = 0
   document.addEventListener('touchend', (e) => {
     const currentTime = new Date().getTime()
@@ -35,6 +40,7 @@ onMounted(() => {
     lastTapTime = currentTime
   }, { passive: false })
 
+  // PCでのズームを防止
   document.addEventListener('wheel', (e) => {
     if (e.ctrlKey) {
       e.preventDefault()
@@ -46,22 +52,5 @@ onMounted(() => {
       e.preventDefault()
     }
   })
-
-  const handleOrientationChange = () => {
-    const bodyClassList = document.body.classList;
-    console.log('Orientation changed:', window.orientation);
-    if (window.orientation === 90 || window.orientation === -90) {
-      console.log('Switching to landscape mode');
-      bodyClassList.remove('portrait-body');
-      bodyClassList.add('landscape-body');
-    } else {
-      console.log('Switching to portrait mode');
-      bodyClassList.remove('landscape-body');
-      bodyClassList.add('portrait-body');
-    }
-  }
-
-  handleOrientationChange();
-  window.addEventListener("orientationchange", handleOrientationChange);
 })
 </script>

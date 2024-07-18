@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @layer base {
   html,
   body {
@@ -142,6 +146,18 @@
     top: 50%;
     transform: translateY(-50%);
   }
+
+  .input-group {
+    @apply relative w-full;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg;
+  }
+
+  .icon-eye {
+    @apply absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer;
+  }
 }
 
 @media (min-width: 1024px) {
@@ -156,29 +172,4 @@
   .chat-window {
     @apply bg-white;
   }
-}
-
-@media screen and (orientation: landscape) {
-  .landscape-body {
-    @apply rotate-90 transform-origin-left-top absolute overflow-hidden;
-    width: 100vh;
-    height: 100vw;
-  }
-}
-
-@media screen and (orientation: portrait) {
-  .portrait-body {
-    @apply initial;
-    width: initial;
-    height: initial;
-    overflow: initial;
-    position: initial;
-    top: initial;
-    left: initial;
-  }
-}
-
-body,
-html {
-  @apply w-full h-full overflow-hidden;
 }
