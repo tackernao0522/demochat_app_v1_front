@@ -58,8 +58,8 @@ onMounted(() => {
     if (window.orientation === 90 || window.orientation === -90) {
       document.body.style.transform = "rotate(90deg)";
       document.body.style.transformOrigin = "left top";
-      document.body.style.width = "100vh";
-      document.body.style.height = "100vw";
+      document.body.style.width = `${window.innerHeight}px`;
+      document.body.style.height = `${window.innerWidth}px`;
       document.body.style.overflowX = "hidden";
       document.body.style.position = "absolute";
       document.body.style.top = "0";  // 修正
