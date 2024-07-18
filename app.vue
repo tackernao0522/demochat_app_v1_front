@@ -62,8 +62,8 @@ onMounted(() => {
       document.body.style.height = "100vw";
       document.body.style.overflowX = "hidden";
       document.body.style.position = "absolute";
-      document.body.style.top = "100%";
-      document.body.style.left = "0";
+      document.body.style.top = "0";  // 修正
+      document.body.style.left = "0";  // 修正
     } else {
       document.body.style.transform = "rotate(0deg)";
       document.body.style.transformOrigin = "initial";
