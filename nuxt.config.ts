@@ -23,8 +23,8 @@ export default defineNuxtConfig({
     },
   },
   runtimeConfig: {
-    basicAuthUser: process.env.BASIC_AUTH_USER || "",
-    basicAuthPassword: process.env.BASIC_AUTH_PASSWORD || "",
+    basicAuthUser: process.env.BASIC_AUTH_USER,
+    basicAuthPassword: process.env.BASIC_AUTH_PASSWORD,
     public: {
       NUXT_ENV_ENCRYPTION_KEY: process.env.NUXT_ENV_ENCRYPTION_KEY || "",
       apiUrl: process.env.API_URL || "https://demochat-api.fly.dev",
@@ -32,7 +32,6 @@ export default defineNuxtConfig({
       logLevel: process.env.LOG_LEVEL || "debug",
     },
   },
-  // routeRules を削除しました
   devServer: {
     port: parseInt(process.env.FRONT_PORT || "8080"),
     host: "0.0.0.0",
@@ -44,5 +43,5 @@ export default defineNuxtConfig({
   experimental: {
     payloadExtraction: false,
   },
-  compatibilityDate: "2024-07-18",
+  compatibilityDate: "2024-03-18",
 });
