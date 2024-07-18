@@ -21,5 +21,30 @@ module.exports = {
     },
   },
   variants: {},
-  plugins: [],
+  plugins: [
+    function ({ addUtilities }) {
+      const newUtilities = {
+        ".rotate-90": {
+          transform: "rotate(90deg)",
+        },
+        ".transform-origin-left-top": {
+          transformOrigin: "left top",
+        },
+        ".absolute-position": {
+          position: "absolute",
+        },
+        ".hidden-overflow-x": {
+          overflowX: "hidden",
+        },
+        ".full-height": {
+          height: "100vw",
+        },
+        ".full-width": {
+          width: "100vh",
+        },
+      };
+
+      addUtilities(newUtilities, ["responsive", "hover"]);
+    },
+  ],
 };
