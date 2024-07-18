@@ -32,9 +32,7 @@ export default defineNuxtConfig({
       logLevel: process.env.LOG_LEVEL || "debug",
     },
   },
-  routeRules: {
-    "/**": { middleware: ["basic-auth"] },
-  },
+  // routeRules を削除しました
   devServer: {
     port: parseInt(process.env.FRONT_PORT || "8080"),
     host: "0.0.0.0",
@@ -46,6 +44,5 @@ export default defineNuxtConfig({
   experimental: {
     payloadExtraction: false,
   },
-  // 互換性日付を追加
   compatibilityDate: "2024-07-18",
 });
