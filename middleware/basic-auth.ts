@@ -1,47 +1,50 @@
-import { defineEventHandler, getHeader, H3Event } from "h3";
-import { useRuntimeConfig } from "#imports";
+import { defineNuxtRouteMiddleware, useRuntimeConfig } from "#app";
+import { H3Event } from "h3";
 
-export default defineEventHandler((event: H3Event) => {
-  const config = useRuntimeConfig();
+export default defineNuxtRouteMiddleware((to, from) => {
+  const nuxtApp = useNuxtApp();
+  const event: H3Event = nuxtApp.ssrContext?.event;
 
-  console.log("NODE_ENV:", process.env.NODE_ENV);
-  console.log("Basic Auth User:", config.basicAuthUser);
-  console.log("Basic Auth Password:", config.basicAuthPassword);
+  if (process.server && event) {
+    const config = useRuntimeConfig();
 
-  // 本番環境でのみBasic認証を適用
-  if (process.env.NODE_ENV !== "production") {
-    console.log("Skipping Basic Auth: Not in production");
-    return;
+    console.log("NODE_ENV:", process.env.NODE_ENV);
+    console.log("Basic Auth User:", config.basicAuthUser);
+    console.log("Basic Auth Password:", config.basicAuthPassword);
+
+    // 本番環境でのみBasic認証を適用
+    if (process.env.NODE_ENV !== "production") {
+      console.log("Skipping Basic Auth: Not in production");
+      return;
+    }
+
+    const auth = event.node.req.headers.authorization;
+
+    if (!auth || auth.indexOf("Basic ") === -1) {
+      console.log("No valid authorization header found");
+      return sendUnauthorized(event);
+    }
+
+    const base64Credentials = auth.split(" ")[1];
+    const credentials = Buffer.from(base64Credentials, "base64").toString(
+      "ascii"
+    );
+    const [username, password] = credentials.split(":");
+
+    const validUsername = config.basicAuthUser;
+    const validPassword = config.basicAuthPassword;
+
+    if (username !== validUsername || password !== validPassword) {
+      console.log("Invalid credentials provided");
+      return sendUnauthorized(event);
+    }
+
+    console.log("Basic Auth successful");
   }
-
-  const auth = getHeader(event, "authorization");
-
-  if (!auth || auth.indexOf("Basic ") === -1) {
-    console.log("No valid authorization header found");
-    return sendUnauthorized(event);
-  }
-
-  const base64Credentials = auth.split(" ")[1];
-  const credentials = Buffer.from(base64Credentials, "base64").toString(
-    "ascii"
-  );
-  const [username, password] = credentials.split(":");
-
-  const validUsername = config.basicAuthUser;
-  const validPassword = config.basicAuthPassword;
-
-  if (username !== validUsername || password !== validPassword) {
-    console.log("Invalid credentials provided");
-    return sendUnauthorized(event);
-  }
-
-  console.log("Basic Auth successful");
-  // 明示的にundefinedを返す
-  return;
 });
 
 function sendUnauthorized(event: H3Event) {
   event.node.res.setHeader("WWW-Authenticate", 'Basic realm="Secure Area"');
   event.node.res.statusCode = 401;
-  event.node.res.end("Unauthorized");
+  return event.node.res.end("Unauthorized");
 }
