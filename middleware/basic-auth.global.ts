@@ -1,7 +1,9 @@
 import { defineNuxtRouteMiddleware, useRuntimeConfig } from "#app";
+import { useNuxtApp } from "#imports";
 
 export default defineNuxtRouteMiddleware((to, from) => {
   const config = useRuntimeConfig();
+  const { ssrContext } = useNuxtApp();
 
   console.log("Global Basic Auth middleware is running");
   console.log("NODE_ENV:", process.env.NODE_ENV);
@@ -9,19 +11,21 @@ export default defineNuxtRouteMiddleware((to, from) => {
   console.log("Basic Auth Password:", config.basicAuthPassword);
 
   if (process.server && process.env.NODE_ENV === "production") {
-    const event = useRequestEvent();
-    if (!event) {
+    if (!ssrContext || !ssrContext.event) {
       console.log("No request event found");
       return;
     }
 
-    const auth = event.node.req.headers.authorization;
+    const auth = ssrContext.event.node.req.headers.authorization;
 
     if (!auth) {
       console.log("No authorization header found");
-      event.node.res.setHeader("WWW-Authenticate", 'Basic realm="Secure Area"');
-      event.node.res.statusCode = 401;
-      event.node.res.end("Unauthorized");
+      ssrContext.event.node.res.setHeader(
+        "WWW-Authenticate",
+        'Basic realm="Secure Area"'
+      );
+      ssrContext.event.node.res.statusCode = 401;
+      ssrContext.event.node.res.end("Unauthorized");
       return;
     }
 
@@ -35,9 +39,12 @@ export default defineNuxtRouteMiddleware((to, from) => {
       password !== config.basicAuthPassword
     ) {
       console.log("Invalid credentials provided");
-      event.node.res.setHeader("WWW-Authenticate", 'Basic realm="Secure Area"');
-      event.node.res.statusCode = 401;
-      event.node.res.end("Unauthorized");
+      ssrContext.event.node.res.setHeader(
+        "WWW-Authenticate",
+        'Basic realm="Secure Area"'
+      );
+      ssrContext.event.node.res.statusCode = 401;
+      ssrContext.event.node.res.end("Unauthorized");
       return;
     }
 
