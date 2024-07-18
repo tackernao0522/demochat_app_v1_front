@@ -1,7 +1,3 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 @layer base {
   html,
   body {
@@ -162,13 +158,9 @@
   }
 }
 
-/* カスタムクラス */
 @media screen and (orientation: landscape) {
   .landscape-body {
-    transform: rotate(90deg);
-    transform-origin: left top;
-    position: absolute;
-    overflow-x: hidden;
+    @apply rotate-90 transform-origin-left-top absolute overflow-hidden;
     width: 100vh;
     height: 100vw;
   }
@@ -176,12 +168,13 @@
 
 @media screen and (orientation: portrait) {
   .portrait-body {
-    transform: none;
-    transform-origin: initial;
-    position: static;
-    overflow-x: visible;
-    width: 100%;
-    height: 100%;
+    @apply initial;
+    width: initial;
+    height: initial;
+    overflow: initial;
+    position: initial;
+    top: initial;
+    left: initial;
   }
 }
 
