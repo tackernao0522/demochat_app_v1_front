@@ -4,8 +4,18 @@
         <form @submit.prevent="signup" class="form-layout">
             <FormField type="text" placeholder="名前" v-model="name" />
             <FormField type="email" placeholder="メールアドレス" v-model="email" />
-            <FormField type="password" placeholder="パスワード" v-model="password" />
-            <FormField type="password" placeholder="パスワード(確認用)" v-model="passwordConfirmation" />
+            <div class="relative">
+                <FormField :type="passwordFieldType" placeholder="パスワード" v-model="password" />
+                <font-awesome-icon :icon="passwordVisible ? 'eye-slash' : 'eye'"
+                    class="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                    @click="togglePasswordVisibility" />
+            </div>
+            <div class="relative">
+                <FormField :type="passwordFieldType" placeholder="パスワード(確認用)" v-model="passwordConfirmation" />
+                <font-awesome-icon :icon="passwordVisible ? 'eye-slash' : 'eye'"
+                    class="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                    @click="togglePasswordVisibility" />
+            </div>
             <button class="btn-primary">登録する</button>
         </form>
         <MessageDisplay :message="successMessage" :isError="false" />
@@ -14,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useNuxtApp } from '#app'
 import { useRedirect } from '../composables/useRedirect'
 import { useCookiesAuth } from '../composables/useCookiesAuth'
@@ -27,6 +37,13 @@ const password = ref('')
 const passwordConfirmation = ref('')
 const successMessage = ref('')
 const errorMessage = ref('')
+
+const passwordVisible = ref(false)
+const passwordFieldType = computed(() => (passwordVisible.value ? 'text' : 'password'))
+
+const togglePasswordVisibility = () => {
+    passwordVisible.value = !passwordVisible.value
+}
 
 const { $axios } = useNuxtApp()
 const { redirectToChatroom } = useRedirect()
