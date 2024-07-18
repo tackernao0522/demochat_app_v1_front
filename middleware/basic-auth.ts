@@ -2,19 +2,22 @@ import { defineNuxtRouteMiddleware, useRuntimeConfig } from "#app";
 import { H3Event } from "h3";
 
 export default defineNuxtRouteMiddleware((to, from) => {
+  console.log("Basic Auth middleware is running");
+
   const nuxtApp = useNuxtApp();
-  const event: H3Event = nuxtApp.ssrContext?.event;
+  const event: H3Event | undefined = nuxtApp.ssrContext?.event;
+  const config = useRuntimeConfig();
+
+  console.log("NODE_ENV:", process.env.NODE_ENV);
+  console.log("Is Server:", process.server);
+  console.log("Basic Auth User:", config.basicAuthUser);
+  console.log("Basic Auth Password:", config.basicAuthPassword);
 
   if (process.server && event) {
-    const config = useRuntimeConfig();
+    console.log("Server-side execution confirmed");
 
-    console.log("NODE_ENV:", process.env.NODE_ENV);
-    console.log("Basic Auth User:", config.basicAuthUser);
-    console.log("Basic Auth Password:", config.basicAuthPassword);
-
-    // 本番環境でのみBasic認証を適用
     if (process.env.NODE_ENV !== "production") {
-      console.log("Skipping Basic Auth: Not in production");
+      console.log("Skipping Basic Auth: Not in production environment");
       return;
     }
 
@@ -22,7 +25,10 @@ export default defineNuxtRouteMiddleware((to, from) => {
 
     if (!auth || auth.indexOf("Basic ") === -1) {
       console.log("No valid authorization header found");
-      return sendUnauthorized(event);
+      event.node.res.setHeader("WWW-Authenticate", 'Basic realm="Secure Area"');
+      event.node.res.statusCode = 401;
+      event.node.res.end("Unauthorized");
+      return;
     }
 
     const base64Credentials = auth.split(" ")[1];
@@ -31,20 +37,19 @@ export default defineNuxtRouteMiddleware((to, from) => {
     );
     const [username, password] = credentials.split(":");
 
-    const validUsername = config.basicAuthUser;
-    const validPassword = config.basicAuthPassword;
-
-    if (username !== validUsername || password !== validPassword) {
+    if (
+      username !== config.basicAuthUser ||
+      password !== config.basicAuthPassword
+    ) {
       console.log("Invalid credentials provided");
-      return sendUnauthorized(event);
+      event.node.res.setHeader("WWW-Authenticate", 'Basic realm="Secure Area"');
+      event.node.res.statusCode = 401;
+      event.node.res.end("Unauthorized");
+      return;
     }
 
     console.log("Basic Auth successful");
+  } else {
+    console.log("Not running on server or no event object");
   }
 });
-
-function sendUnauthorized(event: H3Event) {
-  event.node.res.setHeader("WWW-Authenticate", 'Basic realm="Secure Area"');
-  event.node.res.statusCode = 401;
-  return event.node.res.end("Unauthorized");
-}

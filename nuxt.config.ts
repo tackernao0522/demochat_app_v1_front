@@ -46,4 +46,6 @@ export default defineNuxtConfig({
   experimental: {
     payloadExtraction: false,
   },
+  // 互換性日付を追加
+  compatibilityDate: "2024-07-18",
 });
