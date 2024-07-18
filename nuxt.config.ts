@@ -23,20 +23,25 @@ export default defineNuxtConfig({
     },
   },
   runtimeConfig: {
+    basicAuthUser: process.env.BASIC_AUTH_USER || "",
+    basicAuthPassword: process.env.BASIC_AUTH_PASSWORD || "",
     public: {
       NUXT_ENV_ENCRYPTION_KEY: process.env.NUXT_ENV_ENCRYPTION_KEY || "",
       apiUrl: process.env.API_URL || "https://demochat-api.fly.dev",
       nodeEnv: process.env.NODE_ENV || "development",
       logLevel: process.env.LOG_LEVEL || "debug",
     },
-    basicAuthUser: process.env.BASIC_AUTH_USER || "",
-    basicAuthPassword: process.env.BASIC_AUTH_PASSWORD || "",
-  },
-  router: {
-    middleware: ["basic-auth.global"],
   },
   devServer: {
     port: parseInt(process.env.FRONT_PORT || "8080"),
     host: "0.0.0.0",
   },
+  nitro: {
+    preset: "vercel",
+  },
+  ssr: true,
+  experimental: {
+    payloadExtraction: false,
+  },
+  compatibilityDate: "2024-07-18",
 });
