@@ -146,18 +146,6 @@
     top: 50%;
     transform: translateY(-50%);
   }
-
-  .input-group {
-    @apply relative w-full;
-  }
-
-  .input-field {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-lg;
-  }
-
-  .icon-eye {
-    @apply absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer;
-  }
 }
 
 @media (min-width: 1024px) {
@@ -171,5 +159,19 @@
 
   .chat-window {
     @apply bg-white;
+  }
+}
+
+/* 強制的に縦向きに表示する */
+@media screen and (orientation: landscape) {
+  body {
+    transform: rotate(90deg);
+    transform-origin: left top;
+    width: 100vh; /* viewport height in landscape mode */
+    height: 100vw; /* viewport width in landscape mode */
+    overflow-x: hidden;
+    position: absolute;
+    top: 100%;
+    left: 0;
   }
 }
