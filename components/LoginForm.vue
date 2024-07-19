@@ -2,7 +2,7 @@
     <div class="form-container">
         <h2 class="form-title">ログイン</h2>
         <form @submit.prevent="handleLogin" class="form-layout">
-            <FormField type="email" placeholder="メールアドレス" v-model="email" />
+            <FormField type="email" placeholder="メールアドレス(半角英数字6文字以上)" v-model="email" />
             <div class="relative">
                 <FormField :type="passwordFieldType" placeholder="パスワード" v-model="password" />
                 <font-awesome-icon :icon="passwordVisible ? 'eye-slash' : 'eye'"
