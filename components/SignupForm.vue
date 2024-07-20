@@ -1,28 +1,25 @@
 <template>
-    <div class="modal-overlay" @click.self="$emit('close')">
-        <div class="modal-content">
-            <span class="modal-close" @click="$emit('close')">&times;</span>
-            <h2 class="form-title">アカウントを登録</h2>
-            <form @submit.prevent="signup" class="form-layout">
-                <FormField type="text" placeholder="名前" v-model="name" />
-                <FormField type="email" placeholder="メールアドレス" v-model="email" />
-                <div class="relative">
-                    <FormField :type="passwordFieldType" placeholder="パスワード" v-model="password" />
-                    <font-awesome-icon :icon="passwordVisible ? 'eye-slash' : 'eye'"
-                        class="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
-                        @click="togglePasswordVisibility" />
-                </div>
-                <div class="relative">
-                    <FormField :type="passwordFieldType" placeholder="パスワード(確認用)" v-model="passwordConfirmation" />
-                    <font-awesome-icon :icon="passwordVisible ? 'eye-slash' : 'eye'"
-                        class="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
-                        @click="togglePasswordVisibility" />
-                </div>
-                <button class="btn-primary">登録する</button>
-            </form>
-            <MessageDisplay :message="successMessage" :isError="false" />
-            <MessageDisplay :message="errorMessage" :isError="true" />
-        </div>
+    <div class="form-container landscape:overflow-y-auto landscape:max-h-[80vh]">
+        <h2 class="form-title">アカウントを登録</h2>
+        <form @submit.prevent="signup" class="form-layout">
+            <FormField type="text" placeholder="名前" v-model="name" />
+            <FormField type="email" placeholder="メールアドレス" v-model="email" />
+            <div class="relative">
+                <FormField :type="passwordFieldType" placeholder="パスワード" v-model="password" />
+                <font-awesome-icon :icon="passwordVisible ? 'eye-slash' : 'eye'"
+                    class="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                    @click="togglePasswordVisibility" />
+            </div>
+            <div class="relative">
+                <FormField :type="passwordFieldType" placeholder="パスワード(確認用)" v-model="passwordConfirmation" />
+                <font-awesome-icon :icon="passwordVisible ? 'eye-slash' : 'eye'"
+                    class="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                    @click="togglePasswordVisibility" />
+            </div>
+            <button class="btn-primary">登録する</button>
+        </form>
+        <MessageDisplay :message="successMessage" :isError="false" />
+        <MessageDisplay :message="errorMessage" :isError="true" />
     </div>
 </template>
 
@@ -104,6 +101,4 @@ const signup = async () => {
         handleSignupError(error)
     }
 }
-
-defineEmits(['close'])
 </script>
