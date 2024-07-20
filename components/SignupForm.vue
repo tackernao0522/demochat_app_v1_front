@@ -1,5 +1,3 @@
-// part2
-
 <template>
     <div class="modal-overlay" @click.self="$emit('close')">
         <div class="modal-content">
