@@ -1,5 +1,3 @@
-/* assets/css/tailwind.css */
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -171,7 +169,7 @@
   }
 
   .modal-content {
-    @apply bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4;
+    @apply bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4 overflow-y-auto max-h-[80vh];
   }
 
   .modal-close {
