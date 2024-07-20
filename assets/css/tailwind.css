@@ -158,78 +158,41 @@
   .icon-eye {
     @apply absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer;
   }
-}
 
-/* モバイルデバイスの横向き表示時のサインアップ・ログインフォーム調整 */
-@media (max-width: 896px) and (orientation: landscape) {
-  .w-full.sm\:w-9\/10.md\:max-w-custom.mx-auto.my-20 {
-    @apply my-0 max-h-screen flex flex-col justify-center items-center h-screen;
+  /* モーダルスタイル */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50;
   }
 
-  .form-container {
-    @apply p-2 w-full max-w-md;
+  .modal-content {
+    @apply bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4;
+  }
+
+  .modal-close {
+    @apply absolute top-2 right-2 text-gray-500 hover:text-gray-700 cursor-pointer;
+  }
+}
+
+/* レスポンシブ調整 */
+@media (max-width: 640px) {
+  .modal-content {
+    @apply p-4 mx-2;
   }
 
   .form-title {
-    @apply text-sm mb-1;
+    @apply text-lg mb-2;
   }
 
   .form-layout {
-    @apply space-y-1;
+    @apply space-y-2;
   }
 
   .input-field {
-    @apply py-0.5 text-xs;
+    @apply py-1 text-sm;
   }
 
   .btn-primary {
-    @apply py-0.5 text-xs;
-  }
-
-  .icon-eye {
-    @apply text-xs;
-  }
-
-  .input-group {
-    @apply mb-1;
-  }
-
-  .text-red-500,
-  .text-green-500,
-  .text-sm {
-    @apply text-xs;
-  }
-
-  /* サインアップフォーム特有の調整 */
-  .form-container > form > .input-group {
-    @apply inline-block w-[calc(50%-0.25rem)];
-  }
-
-  .form-container > form > .input-group:nth-child(odd) {
-    @apply mr-2;
-  }
-
-  .form-container > form > button {
-    @apply mt-1;
-  }
-
-  /* ログインフォームの位置調整 */
-  .w-full.sm\:w-9\/10.md\:max-w-custom.mx-auto.my-20:has(
-      .form-container:not(:has(> form > .input-group))
-    ) {
-    @apply flex items-center justify-center h-screen;
-  }
-
-  /* サインアップフォームの位置調整 */
-  .w-full.sm\:w-9\/10.md\:max-w-custom.mx-auto.my-20:has(
-      .form-container > form > .input-group
-    ) {
-    @apply mt-4 mb-2;
-  }
-
-  /* 「ようこそ！」テキストの位置調整 */
-  .w-full.sm\:w-9\/10.md\:max-w-custom.mx-auto.my-20 > p:first-child {
-    @apply mb-2;
+    @apply py-1 text-sm;
   }
 }
 

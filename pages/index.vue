@@ -1,9 +1,11 @@
 <template>
   <client-only>
-    <div class="w-full sm:w-9/10 md:max-w-custom mx-auto my-20 rounded-sm shadow-custom bg-white text-center py-5">
-      <p>ようこそ！</p>
-      <component :is="shouldShowLoginForm ? LoginForm : SignupForm" />
-      <p class="text-sm mt-4">
+    <div class="w-full sm:w-9/10 md:max-w-custom mx-auto my-20 rounded-sm shadow-custom bg-white text-center py-8">
+      <p class="text-xl font-semibold mb-6">ようこそ！</p>
+      <button @click="openModal" class="btn-primary mb-6">
+        {{ shouldShowLoginForm ? 'ログイン' : '新規登録' }}
+      </button>
+      <p class="text-sm">
         {{ shouldShowLoginForm ? '初めての方は' : 'アカウントをお持ちの方は' }}
         <span @click="toggleForm" class="text-blue-500 cursor-pointer underline">
           こちら
@@ -11,6 +13,21 @@
         をクリック
       </p>
     </div>
+
+    <Teleport to="body">
+      <div v-if="showModal" class="fixed inset-0 bg-black flex justify-center items-center z-50"
+        @click.self="closeModal">
+        <div class="bg-white p-8 rounded-lg shadow-xl max-w-md w-full mx-4 relative max-h-[90vh] overflow-y-auto">
+          <button @click="closeModal" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+          <component :is="shouldShowLoginForm ? LoginForm : SignupForm" @close="closeModal" />
+        </div>
+      </div>
+    </Teleport>
   </client-only>
 </template>
 
@@ -25,8 +42,17 @@ definePageMeta({
 })
 
 const shouldShowLoginForm = ref(false)
+const showModal = ref(false)
 
 const toggleForm = () => {
   shouldShowLoginForm.value = !shouldShowLoginForm.value
+}
+
+const openModal = () => {
+  showModal.value = true
+}
+
+const closeModal = () => {
+  showModal.value = false
 }
 </script>
