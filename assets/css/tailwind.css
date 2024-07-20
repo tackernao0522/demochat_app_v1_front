@@ -38,6 +38,10 @@
     @apply bg-bodyBg text-white font-bold border-0 rounded px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm cursor-pointer hover:bg-opacity-90 transition w-full sm:w-auto;
   }
 
+  .btn-red {
+    @apply bg-red-400 text-white font-bold border-0 rounded px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm cursor-pointer hover:bg-opacity-90 transition w-full sm:w-auto;
+  }
+
   .form-title {
     @apply text-lg sm:text-xl font-bold mb-4;
   }

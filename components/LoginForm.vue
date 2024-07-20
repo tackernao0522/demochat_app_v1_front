@@ -11,7 +11,7 @@
                         class="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
                         @click="togglePasswordVisibility" />
                 </div>
-                <button class="btn-primary" :disabled="isLoading">
+                <button class="btn-red" :disabled="isLoading">
                     {{ isLoading ? 'ログイン中...' : 'ログインする' }}
                 </button>
             </form>
