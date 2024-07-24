@@ -17,10 +17,13 @@ import NewChatForm from '../components/NewChatForm.vue'
 import { useCookiesAuth } from '../composables/useCookiesAuth'
 import { useRedirect } from '../composables/useRedirect'
 
-definePageMeta({
-    middleware: ['auth'],
-    requiresAuth: true
-})
+// definePageMetaの呼び出しを条件付きで行う
+if (typeof definePageMeta !== 'undefined') {
+    definePageMeta({
+        middleware: ['auth'],
+        requiresAuth: true
+    })
+}
 
 const messages = ref([])
 const username = ref('')
