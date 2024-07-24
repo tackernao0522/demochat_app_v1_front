@@ -23,3 +23,5 @@ logs
 .env.*
 !.env.example
 .ash_history
+front.md
+coverage

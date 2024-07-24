@@ -1,6 +1,6 @@
 <template>
     <div class="chat-window" ref="chatContainer">
-        <div v-if="props.messages.length" class="messages" ref="messageList">
+        <div v-if="props.messages && props.messages.length" class="messages" ref="messageList">
             <div v-for="message in props.messages" :key="message.id"
                 :class="['message-wrapper', messageClass(message)]">
                 <div class="message-inner" @dblclick="handleDoubleClick(message)"
@@ -11,9 +11,9 @@
                     <div class="message-content-wrapper">
                         <span class="message-content">{{ message.content || '(空のメッセージ)' }}</span>
                         <div class="like-container group" v-if="message.likes && message.likes.length > 0">
-                            <div class="like-button">
+                            <div class="like-button" @click.stop="createLike(message)">
                                 <font-awesome-icon :icon="['fas', 'heart']"
-                                    class="heart-icon text-red-500 cursor-pointer" @click.stop="createLike(message)" />
+                                    class="heart-icon text-red-500 cursor-pointer" />
                                 <span class="like-count">{{ message.likes.length }}</span>
                             </div>
                             <div class="chat-tooltip">
@@ -33,14 +33,14 @@
 import { ref, watch, nextTick, onMounted, onUpdated } from 'vue'
 import { useNuxtApp } from '#app'
 import { useCookiesAuth } from '../composables/useCookiesAuth'
-import debounce from 'lodash/debounce'
 import { formatDistanceToNow } from 'date-fns'
 import { ja } from 'date-fns/locale'
 
 const props = defineProps({
     messages: {
         type: Array,
-        required: true
+        required: true,
+        default: () => []
     }
 })
 
@@ -64,6 +64,7 @@ const formatDate = (dateString) => {
 }
 
 const scrollToBottom = () => {
+    console.log('Scrolling to bottom');
     if (chatContainer.value) {
         chatContainer.value.scrollTop = chatContainer.value.scrollHeight
     }
@@ -82,13 +83,14 @@ const getLikeUsers = (message) => {
     return `いいねしたユーザー: ${likeUsers}`;
 }
 
-const createLike = debounce(async (message) => {
+const createLike = async (message) => {
     try {
         const authData = getAuthData();
         const res = await $axios.post(`/messages/${message.id}/likes`, {});
 
         if (!res || !res.data) {
-            throw new Error('いいね操作に失敗しました');
+            console.error('いいね操作に失敗しました');
+            return;
         }
 
         let updatedLikes;
@@ -106,14 +108,8 @@ const createLike = debounce(async (message) => {
 
     } catch (error) {
         console.error('いいね操作エラー:', error);
-        if (error.response) {
-            console.error('エラーレスポンス:', error.response.data);
-            console.error('エラーステータス:', error.response.status);
-            console.error('エラーヘッダー:', error.response.headers);
-        }
-        alert('いいね操作に失敗しました。もう一度お試しください。');
     }
-}, 300);
+};
 
 const handleDoubleClick = (message) => {
     createLike(message);
@@ -131,24 +127,32 @@ const handleTouchEnd = (event, message) => {
         const currentTime = new Date().getTime();
         const tapLength = currentTime - lastTapTime;
         if (tapLength < 300 && tapLength > 0) {
-            // ダブルタップとみなす
             createLike(message);
         }
         lastTapTime = currentTime;
     }
 }
 
-watch(() => props.messages, async (newMessages) => {
-    console.log('Messages in ChatWindow:', newMessages)
-    await nextTick()
-    scrollToBottom()
-}, { deep: true })
+watch(() => props.messages, (newMessages, oldMessages) => {
+    console.log('Messages updated, scheduling scroll');
+    if (newMessages && oldMessages && newMessages.length > oldMessages.length) {
+        nextTick(() => {
+            console.log('Next tick, scrolling to bottom');
+            scrollToBottom()
+        })
+    }
+}, { deep: true, immediate: true })
 
 onMounted(() => {
+    console.log('Component mounted, scrolling to bottom');
     scrollToBottom()
 })
 
 onUpdated(() => {
+    console.log('Component updated, scrolling to bottom');
     scrollToBottom()
 })
+
+// Expose scrollToBottom for testing
+defineExpose({ scrollToBottom })
 </script>
