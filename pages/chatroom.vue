@@ -1,11 +1,13 @@
 <template>
-    <div class="page-container">
-        <div class="chat-container">
-            <Navbar :username="username" :userEmail="userEmail" />
-            <ChatWindow :messages="messages" @updateMessages="updateMessages" />
-            <NewChatForm @newMessage="sendMessage" />
+    <client-only>
+        <div class="page-container">
+            <div class="chat-container">
+                <Navbar :username="username" :userEmail="userEmail" />
+                <ChatWindow :messages="messages" @updateMessages="updateMessages" />
+                <NewChatForm @newMessage="sendMessage" />
+            </div>
         </div>
-    </div>
+    </client-only>
 </template>
 
 <script setup lang="ts">

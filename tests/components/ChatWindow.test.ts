@@ -142,58 +142,65 @@ describe("ChatWindow", () => {
     expect(wrapper.emitted().updateMessages[0]).toEqual([expect.any(Object)]);
   });
 
-  // it("新しいメッセージが追加された時に最下部にスクロールすること", async () => {
-  //   const wrapper = mountChatWindow();
-  //   const scrollToBottomSpy = vi.spyOn(wrapper.vm, "scrollToBottom");
+  it("新しいメッセージが追加された時に最下部にスクロールすること", async () => {
+    const wrapper = mountChatWindow();
+    const initialScrollToBottomCalled = wrapper.vm.scrollToBottomCalled;
 
-  //   const newMessages = [
-  //     ...messages,
-  //     {
-  //       id: 3,
-  //       user_id: 1,
-  //       name: "User 1",
-  //       content: "New message",
-  //       email: "user1@example.com",
-  //       created_at: "2023-01-02T00:00:00Z",
-  //       likes: [],
-  //     },
-  //   ];
+    const newMessages = [
+      ...messages,
+      {
+        id: 3,
+        user_id: 1,
+        name: "User 1",
+        content: "New message",
+        email: "user1@example.com",
+        created_at: "2023-01-02T00:00:00Z",
+        likes: [],
+      },
+    ];
 
-  //   await wrapper.setProps({ messages: newMessages });
+    await wrapper.setProps({ messages: newMessages });
 
-  //   // Wait for Vue to update the DOM
-  //   await wrapper.vm.$nextTick();
+    // Wait for Vue to update the DOM
+    await wrapper.vm.$nextTick();
 
-  //   // Trigger all timers (including setTimeout, setInterval, etc.)
-  //   vi.runAllTimers();
+    // Run all timers
+    vi.runAllTimers();
 
-  //   // Wait for all pending promises to resolve
-  //   await flushPromises();
+    // Wait for all pending promises to resolve
+    await flushPromises();
 
-  //   // Force a re-render and wait for it to complete
-  //   await wrapper.vm.$forceUpdate();
-  //   await wrapper.vm.$nextTick();
+    // Force a re-render and wait for it to complete
+    await wrapper.vm.$forceUpdate();
+    await wrapper.vm.$nextTick();
 
-  //   // Run any remaining timers
-  //   vi.runAllTimers();
+    // Run any remaining timers
+    vi.runAllTimers();
 
-  //   // Wait for any remaining promises
-  //   await flushPromises();
+    // Wait for any remaining promises
+    await flushPromises();
 
-  //   // Log the current state of the component
-  //   console.log("Component state:", wrapper.vm.$data);
-  //   console.log("Props:", wrapper.props());
-  //   console.log("DOM:", wrapper.html());
+    // Log the current state of the component
+    console.log("Component state:", wrapper.vm.$data);
+    console.log("Props:", wrapper.props());
+    console.log("DOM:", wrapper.html());
 
-  //   // Log the number of times scrollToBottom was called
-  //   console.log(
-  //     `scrollToBottom was called ${scrollToBottomSpy.mock.calls.length} times`
-  //   );
+    // Log the number of times scrollToBottom was called
+    console.log(
+      `scrollToBottom was called ${wrapper.vm.scrollToBottomCalled - initialScrollToBottomCalled} times`
+    );
 
-  //   // Check if scrollToBottom was called
-  //   expect(scrollToBottomSpy).toHaveBeenCalled();
+    // Check if scrollToBottom was called
+    expect(wrapper.vm.scrollToBottomCalled).toBeGreaterThan(
+      initialScrollToBottomCalled
+    );
 
-  //   // Additional assertion to ensure the log is visible in test output
-  //   expect(scrollToBottomSpy.mock.calls.length).toBeGreaterThan(0);
-  // });
+    // Check if scrolledToBottom flag is true
+    expect(wrapper.vm.scrolledToBottom).toBe(true);
+
+    // Additional assertion to ensure the log is visible in test output
+    expect(
+      wrapper.vm.scrollToBottomCalled - initialScrollToBottomCalled
+    ).toBeGreaterThan(0);
+  });
 });

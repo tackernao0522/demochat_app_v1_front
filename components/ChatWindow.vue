@@ -53,6 +53,8 @@ const chatContainer = ref(null)
 const messageList = ref(null)
 let lastTapTime = 0
 let touchStartTime = 0
+const scrolledToBottom = ref(false)
+const scrollToBottomCalled = ref(0)
 
 const messageClass = (message) => {
     const authData = getAuthData();
@@ -67,6 +69,8 @@ const scrollToBottom = () => {
     console.log('Scrolling to bottom');
     if (chatContainer.value) {
         chatContainer.value.scrollTop = chatContainer.value.scrollHeight
+        scrolledToBottom.value = true
+        scrollToBottomCalled.value++
     }
 }
 
@@ -135,7 +139,7 @@ const handleTouchEnd = (event, message) => {
 
 watch(() => props.messages, (newMessages, oldMessages) => {
     console.log('Messages updated, scheduling scroll');
-    if (newMessages && oldMessages && newMessages.length > oldMessages.length) {
+    if (newMessages && (!oldMessages || newMessages.length !== oldMessages.length)) {
         nextTick(() => {
             console.log('Next tick, scrolling to bottom');
             scrollToBottom()
@@ -153,6 +157,6 @@ onUpdated(() => {
     scrollToBottom()
 })
 
-// Expose scrollToBottom for testing
-defineExpose({ scrollToBottom })
+// Expose scrollToBottom, scrolledToBottom, and scrollToBottomCalled for testing
+defineExpose({ scrollToBottom, scrolledToBottom, scrollToBottomCalled })
 </script>

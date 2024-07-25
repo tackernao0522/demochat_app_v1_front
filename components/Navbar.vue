@@ -18,8 +18,8 @@
                 <div v-if="isMenuOpen" class="mt-4">
                     <div class="bg-white shadow-md rounded-lg overflow-hidden">
                         <div class="px-4 py-2 bg-gray-50">
-                            <p class="text-base sm:text-lg">こんにちは、{{ username }}さん</p>
-                            <p class="text-xs sm:text-sm text-gray-400">現在、{{ userEmail }}でログイン中です</p>
+                            <p class="text-base sm:text-lg">こんにちは、{{ displayUsername }}さん</p>
+                            <p class="text-xs sm:text-sm text-gray-400">現在、{{ displayUserEmail }}でログイン中です</p>
                         </div>
                         <div class="divide-y divide-gray-200">
                             <a href="#" class="block px-4 py-3 hover:bg-gray-50">プロフィール</a>
@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useLogout } from '../composables/useLogout'
 import { useCookiesAuth } from '../composables/useCookiesAuth'
 
@@ -58,14 +58,11 @@ const { logout, error } = useLogout()
 const errorMessage = ref('')
 const isMenuOpen = ref(false)
 
+const displayUsername = computed(() => props.username || 'ゲスト')
+const displayUserEmail = computed(() => props.userEmail || '未登録')
+
 onMounted(() => {
     const authData = getAuthData()
-    if (authData.user && authData.user.name) {
-        props.username = authData.user.name
-    }
-    if (authData.uid) {
-        props.userEmail = authData.uid
-    }
     console.log("Navbar Auth Data:", authData) // デバッグ用ログ
 })
 
