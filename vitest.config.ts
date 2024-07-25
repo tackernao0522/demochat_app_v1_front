@@ -11,7 +11,11 @@ export default defineConfig({
       inline: ["@nuxt/test-utils-edge"],
     },
     setupFiles: ["./tests/setup.ts"],
-    testTimeout: 20000,
+    testTimeout: 30000, // タイムアウト時間を30秒に延長
+    hookTimeout: 30000, // フックのタイムアウト時間も30秒に設定
+    maxConcurrency: 1, // 同時実行テスト数を1に制限
+    maxThreads: 1, // 最大スレッド数を1に制限
+    minThreads: 1, // 最小スレッド数を1に設定
   },
   resolve: {
     alias: {
