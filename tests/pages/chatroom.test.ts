@@ -1,4 +1,4 @@
-import { mount } from "@vue/test-utils";
+import { mount, flushPromises } from "@vue/test-utils";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import Chatroom from "../../pages/chatroom.vue";
 import { createTestingPinia } from "@pinia/testing";
@@ -47,6 +47,8 @@ vi.mock("../../composables/useRedirect", () => ({
 
 describe("Chatroom", () => {
   let wrapper: any;
+  let mockPerform: any;
+  let mockUnsubscribe: any;
 
   beforeEach(() => {
     setActivePinia(createPinia());
@@ -61,6 +63,14 @@ describe("Chatroom", () => {
 
     // ActionCableのモックをリセット
     mockCableSubscriptionsCreate.mockReset();
+
+    // ActionCableの接続をシミュレート
+    mockPerform = vi.fn();
+    mockUnsubscribe = vi.fn();
+    mockCableSubscriptionsCreate.mockImplementation(() => ({
+      perform: mockPerform,
+      unsubscribe: mockUnsubscribe,
+    }));
 
     wrapper = mount(Chatroom, {
       global: {
@@ -130,12 +140,17 @@ describe("Chatroom", () => {
 
   it("新しいメッセージを送信できること", async () => {
     const newMessage = "New message";
-    wrapper.vm.messageChannel = { perform: vi.fn() };
+
+    // WebSocket接続が確立されたことをシミュレート
+    wrapper.vm.isConnected = true;
+    wrapper.vm.messageChannel = { perform: mockPerform };
+
     await wrapper.vm.sendMessage(newMessage);
 
-    expect(wrapper.vm.messageChannel.perform).toHaveBeenCalledWith("receive", {
+    expect(mockPerform).toHaveBeenCalledWith("receive", {
       content: newMessage,
       email: "test@example.com",
+      timestamp: expect.any(Number),
     });
   });
 
@@ -178,16 +193,22 @@ describe("Chatroom", () => {
     };
 
     // ActionCableのsubscriptionsを模倣
+    let connectedCallback;
     let receivedCallback;
     mockCableSubscriptionsCreate.mockImplementation((channel, callbacks) => {
+      connectedCallback = callbacks.connected;
       receivedCallback = callbacks.received;
       return {
-        perform: vi.fn(),
+        perform: mockPerform,
+        unsubscribe: mockUnsubscribe,
       };
     });
 
     // コンポーネントのsetupActionCableメソッドを呼び出す
     await wrapper.vm.setupActionCable();
+
+    // connected コールバックを呼び出す
+    connectedCallback();
 
     // received関数を直接呼び出す
     receivedCallback(newMessage);

@@ -4,20 +4,21 @@
             <div class="chat-container">
                 <Navbar :username="username" :userEmail="userEmail" />
                 <ChatWindow :messages="messages" @updateMessages="updateMessages" />
-                <NewChatForm @newMessage="sendMessage" />
+                <NewChatForm @newMessage="sendMessage" :websocketConnected="isConnected" />
             </div>
         </div>
     </client-only>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useNuxtApp } from '#app'
 import Navbar from '../components/Navbar.vue'
 import ChatWindow from '../components/ChatWindow.vue'
 import NewChatForm from '../components/NewChatForm.vue'
 import { useCookiesAuth } from '../composables/useCookiesAuth'
 import { useRedirect } from '../composables/useRedirect'
+import { logger } from '../utils/logger'
 
 // definePageMetaの呼び出しを条件付きで行う
 if (typeof definePageMeta !== 'undefined') {
@@ -30,6 +31,10 @@ if (typeof definePageMeta !== 'undefined') {
 const messages = ref([])
 const username = ref('')
 const userEmail = ref('')
+const isConnected = ref(false)
+const reconnectAttempts = ref(0)
+const maxReconnectAttempts = 5
+const pendingMessages = ref([])
 
 const { $axios, $cable } = useNuxtApp()
 const { getAuthData, isAuthenticated } = useCookiesAuth()
@@ -38,9 +43,9 @@ const { redirectToLogin } = useRedirect()
 const getMessages = async () => {
     try {
         const authData = getAuthData();
-        console.log("Auth Data in getMessages:", authData);
+        logger.debug("Auth Data in getMessages:", authData);
         if (!authData.token || !authData.client || !authData.uid) {
-            console.error("認証情報が不足しています");
+            logger.error("認証情報が不足しています");
             return;
         }
         const res = await $axios.get('/messages');
@@ -51,48 +56,70 @@ const getMessages = async () => {
             ...message,
             sent_by_current_user: message.user_id === authData.user?.id
         }));
-        console.log('Fetched messages:', messages.value);
+        logger.debug('Fetched messages:', messages.value);
     } catch (err) {
-        console.error('メッセージ一覧を取得できませんでした', err);
+        logger.error('メッセージ一覧を取得できませんでした', err);
         alert('メッセージの取得に失敗しました。ページをリロードしてください。');
     }
 }
 
-const sendMessage = (message) => {
+const sendMessage = async (message) => {
     const authData = getAuthData();
     const user = authData.user;
     if (!user || !user.email) {
-        console.error('User data is missing');
+        logger.error('User data is missing');
         return;
     }
 
-    messageChannel.perform('receive', { content: message, email: user.email });
+    const newMessage = { content: message, email: user.email, timestamp: Date.now() };
+    pendingMessages.value.push(newMessage);
+
+    if (!isConnected.value) {
+        logger.warn('WebSocket not connected. Message queued.');
+        await reconnectAndSendPendingMessages();
+        return;
+    }
+
+    try {
+        await messageChannel.perform('receive', newMessage);
+        logger.debug('Message sent successfully:', newMessage);
+    } catch (error) {
+        logger.error('Failed to send message:', error);
+        alert('メッセージの送信に失敗しました。再度お試しください。');
+    }
 }
 
 const updateMessages = (updatedMessage) => {
     const index = messages.value.findIndex(m => m.id === updatedMessage.id);
     if (index !== -1) {
         messages.value[index] = updatedMessage;
+    } else {
+        messages.value.push(updatedMessage);
     }
 }
 
-let messageChannel
+let messageChannel;
 
 const setupActionCable = () => {
+    if (messageChannel) {
+        messageChannel.unsubscribe();
+    }
+
     messageChannel = $cable.subscriptions.create('RoomChannel', {
         connected() {
-            console.log('Connected to RoomChannel');
+            logger.info('Connected to RoomChannel');
+            isConnected.value = true;
+            reconnectAttempts.value = 0;
             getMessages();
+            sendPendingMessages();
         },
         disconnected() {
-            console.log('Disconnected from RoomChannel');
-            setTimeout(() => {
-                console.log('Attempting to reconnect...');
-                setupActionCable();
-            }, 3000);
+            logger.warn('Disconnected from RoomChannel');
+            isConnected.value = false;
+            reconnectWithBackoff();
         },
         received(data) {
-            console.log('Raw received data:', data);
+            logger.debug('Received message:', data);
             const authData = getAuthData()
             const isSentByCurrentUser = data.email === authData.user.email
 
@@ -101,16 +128,47 @@ const setupActionCable = () => {
                 sent_by_current_user: isSentByCurrentUser
             }
 
-            console.log('Processed received message:', newMessage);
-
-            const existingIndex = messages.value.findIndex(m => m.id === newMessage.id);
-            if (existingIndex !== -1) {
-                messages.value[existingIndex] = newMessage;
-            } else {
-                messages.value.push(newMessage);
-            }
+            updateMessages(newMessage);
+        },
+        rejected() {
+            logger.error('Connection to RoomChannel was rejected');
+            isConnected.value = false;
+            alert('チャットルームへの接続が拒否されました。ページをリロードしてください。');
         }
     })
+}
+
+const reconnectWithBackoff = () => {
+    if (reconnectAttempts.value < maxReconnectAttempts) {
+        reconnectAttempts.value++;
+        const delay = Math.min(30000, 1000 * Math.pow(2, reconnectAttempts.value));
+        logger.info(`Attempting to reconnect in ${delay}ms... (Attempt ${reconnectAttempts.value})`);
+        setTimeout(setupActionCable, delay);
+    } else {
+        logger.error('Max reconnection attempts reached. Please refresh the page.');
+        alert('接続が切断されました。ページをリロードしてください。');
+    }
+}
+
+const reconnectAndSendPendingMessages = async () => {
+    await new Promise(resolve => {
+        const checkConnection = () => {
+            if (isConnected.value) {
+                resolve(true);
+            } else {
+                setTimeout(checkConnection, 1000);
+            }
+        };
+        checkConnection();
+    });
+    sendPendingMessages();
+}
+
+const sendPendingMessages = () => {
+    while (pendingMessages.value.length > 0) {
+        const message = pendingMessages.value.shift();
+        messageChannel.perform('receive', message);
+    }
 }
 
 onMounted(() => {
@@ -124,7 +182,7 @@ onMounted(() => {
         username.value = authData.user.name || '';
         userEmail.value = authData.user.email || '';
     } else {
-        console.error('User data is missing');
+        logger.error('User data is missing');
         redirectToLogin();
         return;
     }
@@ -137,4 +195,12 @@ onBeforeUnmount(() => {
         messageChannel.unsubscribe()
     }
 })
+
+watch(isConnected, (newValue) => {
+    if (newValue) {
+        logger.info('WebSocket connected');
+    } else {
+        logger.warn('WebSocket disconnected');
+    }
+});
 </script>
