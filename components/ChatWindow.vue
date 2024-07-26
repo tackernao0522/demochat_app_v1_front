@@ -46,7 +46,7 @@ const props = defineProps({
 
 const emit = defineEmits(['updateMessages'])
 
-const { $axios } = useNuxtApp()
+const { $axios, $cable } = useNuxtApp()
 const { getAuthData } = useCookiesAuth()
 
 const chatContainer = ref(null)
@@ -137,6 +137,30 @@ const handleTouchEnd = (event, message) => {
     }
 }
 
+let roomChannel;
+
+const setupRoomChannel = () => {
+    roomChannel = $cable.subscriptions.create('RoomChannel', {
+        connected() {
+            console.log('Connected to RoomChannel');
+        },
+        disconnected() {
+            console.log('Disconnected from RoomChannel');
+        },
+        received(data) {
+            console.log('Received update:', data);
+            const updatedMessageIndex = props.messages.findIndex(m => m.id === data.id);
+            if (updatedMessageIndex !== -1) {
+                const updatedMessage = {
+                    ...props.messages[updatedMessageIndex],
+                    ...data
+                };
+                emit('updateMessages', updatedMessage);
+            }
+        }
+    });
+};
+
 watch(() => props.messages, (newMessages, oldMessages) => {
     console.log('Messages updated, scheduling scroll');
     if (newMessages && (!oldMessages || newMessages.length !== oldMessages.length)) {
@@ -149,7 +173,8 @@ watch(() => props.messages, (newMessages, oldMessages) => {
 
 onMounted(() => {
     console.log('Component mounted, scrolling to bottom');
-    scrollToBottom()
+    scrollToBottom();
+    setupRoomChannel();
 })
 
 onUpdated(() => {

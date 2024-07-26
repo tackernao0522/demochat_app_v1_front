@@ -35,10 +35,18 @@ vi.mock("@fortawesome/vue-fontawesome", () => ({
   },
 }));
 
+// Mock Nuxt's useNuxtApp
 vi.mock("#app", () => ({
   useNuxtApp: vi.fn(() => ({
     $axios: {
       post: vi.fn().mockResolvedValue({ data: { id: 1 } }),
+    },
+    $cable: {
+      subscriptions: {
+        create: vi.fn().mockReturnValue({
+          perform: vi.fn(),
+        }),
+      },
     },
   })),
 }));
@@ -180,16 +188,6 @@ describe("ChatWindow", () => {
     // Wait for any remaining promises
     await flushPromises();
 
-    // Log the current state of the component
-    console.log("Component state:", wrapper.vm.$data);
-    console.log("Props:", wrapper.props());
-    console.log("DOM:", wrapper.html());
-
-    // Log the number of times scrollToBottom was called
-    console.log(
-      `scrollToBottom was called ${wrapper.vm.scrollToBottomCalled - initialScrollToBottomCalled} times`
-    );
-
     // Check if scrollToBottom was called
     expect(wrapper.vm.scrollToBottomCalled).toBeGreaterThan(
       initialScrollToBottomCalled
@@ -197,10 +195,5 @@ describe("ChatWindow", () => {
 
     // Check if scrolledToBottom flag is true
     expect(wrapper.vm.scrolledToBottom).toBe(true);
-
-    // Additional assertion to ensure the log is visible in test output
-    expect(
-      wrapper.vm.scrollToBottomCalled - initialScrollToBottomCalled
-    ).toBeGreaterThan(0);
   });
 });
