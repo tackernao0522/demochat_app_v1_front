@@ -48,7 +48,7 @@ vi.mock("#imports", () => ({
     set: vi.fn(),
     remove: vi.fn(),
   }),
-  defineNuxtPlugin: vi.fn(),
+  defineNuxtPlugin: vi.fn((plugin) => plugin),
   useHead: vi.fn(),
   navigateTo: vi.fn(),
   useState: vi.fn(),
@@ -92,6 +92,7 @@ vi.mock("#app", () => ({
   defineNuxtComponent: vi.fn(),
   useRequestHeaders: vi.fn(),
   setResponseStatus: vi.fn(),
+  defineNuxtPlugin: vi.fn((plugin) => plugin),
 }));
 
 // コンソールの警告を抑制（必要に応じて）
