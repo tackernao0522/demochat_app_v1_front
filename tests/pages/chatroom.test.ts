@@ -59,7 +59,7 @@ describe("Chatroom", () => {
       uid: "mock-uid",
     });
     mockAxiosGet.mockResolvedValue({ data: [] });
-    mockIsAuthenticated.mockReturnValue(true);
+    mockIsAuthenticated.mockResolvedValue(true);
 
     // ActionCableのモックをリセット
     mockCableSubscriptionsCreate.mockReset();
@@ -129,7 +129,13 @@ describe("Chatroom", () => {
 
     await wrapper.vm.getMessages();
 
-    expect(mockAxiosGet).toHaveBeenCalledWith("/messages");
+    expect(mockAxiosGet).toHaveBeenCalledWith("/messages", {
+      headers: {
+        "access-token": "mock-token",
+        client: "mock-client",
+        uid: "mock-uid",
+      },
+    });
     expect(wrapper.vm.messages).toEqual(
       mockMessages.map((message) => ({
         ...message,

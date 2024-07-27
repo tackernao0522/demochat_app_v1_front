@@ -8,7 +8,7 @@ import { logger } from "../utils/logger";
 export const useAuth = () => {
   const config = useRuntimeConfig();
   const { saveAuthData, getAuthData, clearAuthData } = useCookiesAuth();
-  const { redirectToChatroom } = useRedirect();
+  const { redirectToChatroom, redirectToLogin } = useRedirect();
 
   const errorMessage = ref("");
   const successMessage = ref("");
@@ -32,9 +32,7 @@ export const useAuth = () => {
       saveAuthData(authHeaders, response.data.data);
       successMessage.value =
         "認証に成功しました。チャットルームにリダイレクトします...";
-      setTimeout(() => {
-        redirectToChatroom();
-      }, 100);
+      redirectToChatroom();
     } else {
       logger.error("Invalid auth response", response);
       throw new Error("認証レスポンスが不正です");
