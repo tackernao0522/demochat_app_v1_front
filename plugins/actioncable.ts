@@ -7,5 +7,10 @@ export default defineNuxtPlugin((nuxtApp) => {
       ? "wss://demochat-api.fly.dev/cable"
       : "ws://localhost:3000/cable"
   );
-  nuxtApp.provide("cable", consumer);
+
+  return {
+    provide: {
+      cable: consumer,
+    },
+  };
 });
