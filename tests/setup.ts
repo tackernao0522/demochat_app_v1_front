@@ -41,6 +41,7 @@ vi.mock("#imports", () => ({
   useRuntimeConfig: () => ({
     public: {
       NUXT_ENV_ENCRYPTION_KEY: "test-key",
+      apiUrl: "https://api.example.com",
     },
   }),
   useCookie: () => ({
