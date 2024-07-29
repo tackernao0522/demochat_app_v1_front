@@ -2,17 +2,20 @@ import { useCookies } from "vue3-cookies";
 import { useRequestHeaders } from "nuxt/app";
 import CryptoJS from "crypto-js";
 import { useRuntimeConfig } from "#app";
-import { logger } from "~/utils/logger"; // 新しく追加したloggerをインポート
+import { logger } from "~/utils/logger";
 
 export const useCookiesAuth = () => {
   const { cookies } = useCookies();
+  const config = useRuntimeConfig();
+  const isProduction = config.public.nodeEnv === "production";
+
   const cookieOptions = {
     path: "/",
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-    domain: process.env.NODE_ENV === "production" ? ".fly.dev" : undefined,
+    secure: isProduction,
+    sameSite: isProduction ? "None" : "Lax",
+    domain: isProduction ? ".fly.dev" : undefined,
   };
-  const config = useRuntimeConfig();
+
   let encryptionKey = config.public.NUXT_ENV_ENCRYPTION_KEY;
 
   if (!encryptionKey) {
@@ -142,16 +145,28 @@ export const useCookiesAuth = () => {
   const clearAuthData = () => {
     if (process.server) return;
 
-    ["access-token", "client", "uid", "user", "expiry"].forEach(
-      (cookieName) => {
-        try {
-          cookies.remove(cookieName);
-          logger.debug(`Removed ${cookieName} cookie`);
-        } catch (error) {
-          logger.error(`Error removing ${cookieName} cookie:`, error);
-        }
+    const cookiesToClear = [
+      "access-token",
+      "client",
+      "uid",
+      "user",
+      "expiry",
+      "_session_id",
+      "user.expires_at",
+      "user.id",
+    ];
+
+    cookiesToClear.forEach((cookieName) => {
+      try {
+        cookies.remove(cookieName, {
+          ...cookieOptions,
+          domain: undefined,
+        });
+        logger.debug(`Removed ${cookieName} cookie`);
+      } catch (error) {
+        logger.error(`Error removing ${cookieName} cookie:`, error);
       }
-    );
+    });
   };
 
   const isAuthenticated = () => {
@@ -164,7 +179,7 @@ export const useCookiesAuth = () => {
 
   const isTokenExpired = () => {
     if (process.server) return true;
-    const expiry = getAuthData().expiry;
+    const { expiry } = getAuthData();
     if (!expiry) {
       logger.debug("No expiry found, token considered expired");
       return true;

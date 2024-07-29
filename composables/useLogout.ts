@@ -1,6 +1,7 @@
 import { ref } from "vue";
 import { useNuxtApp, useRouter } from "#app";
 import { useCookiesAuth } from "./useCookiesAuth";
+import { logger } from "~/utils/logger";
 
 export const useLogout = () => {
   const { $axios } = useNuxtApp();
@@ -12,7 +13,7 @@ export const useLogout = () => {
     error.value = null;
     try {
       const authData = getAuthData();
-      console.log("Logging out with authData:", authData);
+      logger.debug("Logging out with authData:", authData);
       const response = await $axios.delete("/auth/sign_out", {
         headers: {
           "access-token": authData.token,
@@ -23,12 +24,12 @@ export const useLogout = () => {
 
       if (response.status === 200) {
         clearAuthData();
-        console.log("Logout successful, cookies cleared");
+        logger.info("Logout successful, cookies cleared");
         router.push("/");
       }
     } catch (err) {
       error.value = err.response ? err.response.data : err.message;
-      console.error("Logout error:", error.value);
+      logger.error("Logout error:", error.value);
     }
   };
 
