@@ -1,15 +1,28 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ref } from "vue";
-import { useAuth } from "../../composables/useAuth";
-import { useCookiesAuth } from "../../composables/useCookiesAuth";
-import { useRedirect } from "../../composables/useRedirect";
 import axios from "axios";
 
-vi.mock("../../composables/useCookiesAuth");
-vi.mock("../../composables/useRedirect");
+const mockUseCookiesAuth = {
+  saveAuthData: vi.fn(),
+  getAuthData: vi.fn(),
+  clearAuthData: vi.fn(),
+};
+
+vi.mock("../../composables/useCookiesAuth", () => ({
+  useCookiesAuth: () => mockUseCookiesAuth,
+}));
+
+const mockUseRedirect = {
+  redirectToChatroom: vi.fn(),
+  redirectToLogin: vi.fn(),
+};
+
+vi.mock("../../composables/useRedirect", () => ({
+  useRedirect: () => mockUseRedirect,
+}));
+
 vi.mock("axios");
 
-// Nuxtの機能をモック
 vi.mock("#app", () => ({
   useRuntimeConfig: () => ({
     public: {
@@ -19,38 +32,24 @@ vi.mock("#app", () => ({
 }));
 
 describe("useAuth", () => {
-  let auth: ReturnType<typeof useAuth>;
-  const mockSaveAuthData = vi.fn();
-  const mockGetAuthData = vi.fn();
-  const mockClearAuthData = vi.fn();
-  const mockRedirectToChatroom = vi.fn();
-  const mockRedirectToLogin = vi.fn();
+  let auth: any;
   const mockAxiosPost = vi.fn();
   const mockAxiosDelete = vi.fn();
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.resetAllMocks();
-    (useCookiesAuth as jest.Mock).mockReturnValue({
-      saveAuthData: mockSaveAuthData,
-      getAuthData: mockGetAuthData,
-      clearAuthData: mockClearAuthData,
-    });
-    (useRedirect as jest.Mock).mockReturnValue({
-      redirectToChatroom: mockRedirectToChatroom,
-      redirectToLogin: mockRedirectToLogin,
-    });
-    mockGetAuthData.mockReturnValue({
+    mockUseCookiesAuth.getAuthData.mockReturnValue({
       token: "mockToken",
       client: "mockClient",
       uid: "mockUid",
     });
 
-    // axiosのcreateメソッドをモック
-    (axios.create as jest.Mock).mockReturnValue({
+    vi.mocked(axios.create).mockReturnValue({
       post: mockAxiosPost,
       delete: mockAxiosDelete,
-    });
+    } as any);
 
+    const { useAuth } = await import("../../composables/useAuth");
     auth = useAuth();
   });
 
@@ -75,8 +74,8 @@ describe("useAuth", () => {
         { email: "test@example.com", password: "password" },
         expect.any(Object)
       );
-      expect(mockSaveAuthData).toHaveBeenCalled();
-      expect(mockRedirectToChatroom).toHaveBeenCalled();
+      expect(mockUseCookiesAuth.saveAuthData).toHaveBeenCalled();
+      expect(mockUseRedirect.redirectToChatroom).toHaveBeenCalled();
       expect(auth.successMessage.value).toBeTruthy();
       expect(auth.errorMessage.value).toBeFalsy();
     });
@@ -120,8 +119,8 @@ describe("useAuth", () => {
         },
         expect.any(Object)
       );
-      expect(mockSaveAuthData).toHaveBeenCalled();
-      expect(mockRedirectToChatroom).toHaveBeenCalled();
+      expect(mockUseCookiesAuth.saveAuthData).toHaveBeenCalled();
+      expect(mockUseRedirect.redirectToChatroom).toHaveBeenCalled();
       expect(auth.successMessage.value).toBeTruthy();
       expect(auth.errorMessage.value).toBeFalsy();
     });
@@ -152,8 +151,8 @@ describe("useAuth", () => {
         "/auth/sign_out",
         expect.any(Object)
       );
-      expect(mockClearAuthData).toHaveBeenCalled();
-      expect(mockRedirectToLogin).toHaveBeenCalled();
+      expect(mockUseCookiesAuth.clearAuthData).toHaveBeenCalled();
+      expect(mockUseRedirect.redirectToLogin).toHaveBeenCalled();
     });
 
     it("ログアウトが失敗した場合、エラーメッセージが設定されること", async () => {
