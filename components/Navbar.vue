@@ -42,6 +42,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useLogout } from '../composables/useLogout'
 import { useCookiesAuth } from '../composables/useCookiesAuth'
 import { useRedirect } from '../composables/useRedirect'
+import { logger } from '~/utils/logger'
 
 const props = defineProps({
     username: {
@@ -56,7 +57,7 @@ const props = defineProps({
 
 const { getAuthData } = useCookiesAuth()
 const { logout, error } = useLogout()
-const { redirectToLogin } = useRedirect()
+const { redirectToHome } = useRedirect()  // redirectToLogin を redirectToHome に変更
 const errorMessage = ref('')
 const isMenuOpen = ref(false)
 
@@ -65,7 +66,7 @@ const displayUserEmail = computed(() => props.userEmail || '未登録')
 
 onMounted(() => {
     const authData = getAuthData()
-    console.log("Navbar Auth Data:", authData) // デバッグ用ログ
+    logger.debug("Navbar Auth Data:", authData)
 })
 
 const toggleMenu = () => {
@@ -73,13 +74,17 @@ const toggleMenu = () => {
 }
 
 const handleLogout = async () => {
+    logger.info("Logout button clicked")
     try {
-        await logout()
         isMenuOpen.value = false // メニューを閉じる
-        await redirectToLogin() // useRedirectを使用してリダイレクト
+        await logout()
+        logger.info("Logout successful, redirecting to home page")
+        await redirectToHome()  // redirectToLogin を redirectToHome に変更
     } catch (err) {
+        logger.error("Logout Error:", err)
         errorMessage.value = error.value || 'ログアウトに失敗しました'
-        console.error("Logout Error:", err)
+        // Even if logout fails, attempt to redirect
+        await redirectToHome()  // redirectToLogin を redirectToHome に変更
     }
 }
 </script>

@@ -32,24 +32,26 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, computed } from 'vue'
+import { reactive, computed, onMounted } from 'vue'
 import LoginForm from '../components/LoginForm.vue'
 import SignupForm from '../components/SignupForm.vue'
 import { definePageMeta } from '#imports'
+import { useCookiesAuth } from '../composables/useCookiesAuth'
+import { useRedirect } from '../composables/useRedirect'
+import { logger } from '~/utils/logger'
 
-// definePageMetaの呼び出しを分離
-/* c8 ignore next 4 */
-if (import.meta.env.SSR === false) {
-  definePageMeta({
-    middleware: ['auth'],
-    requiresAuth: false
-  })
-}
+definePageMeta({
+  middleware: ['auth'],
+  requiresAuth: false
+})
 
 const state = reactive({
   shouldShowLoginForm: false,
   showModal: false
 })
+
+const { isAuthenticated } = useCookiesAuth()
+const { redirectToChatroom } = useRedirect()
 
 const toggleForm = () => {
   state.shouldShowLoginForm = !state.shouldShowLoginForm
@@ -61,5 +63,15 @@ const openModal = computed(() => () => {
 
 const closeModal = computed(() => () => {
   state.showModal = false
+})
+
+onMounted(async () => {
+  logger.info("Home page mounted")
+  if (await isAuthenticated()) {
+    logger.info("User is authenticated, redirecting to chatroom")
+    redirectToChatroom()
+  } else {
+    logger.info("User is not authenticated, showing signup/login options")
+  }
 })
 </script>
