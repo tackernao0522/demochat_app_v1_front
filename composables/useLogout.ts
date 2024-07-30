@@ -1,11 +1,13 @@
 import { ref } from "vue";
 import { useNuxtApp } from "#app";
 import { useCookiesAuth } from "./useCookiesAuth";
+import { useRedirect } from "./useRedirect";
 import { logger } from "~/utils/logger";
 
 export const useLogout = () => {
   const { $axios } = useNuxtApp();
   const { getAuthData, clearAuthData } = useCookiesAuth();
+  const { redirectToHome } = useRedirect();
   const error = ref(null);
 
   const logout = async () => {
@@ -18,7 +20,7 @@ export const useLogout = () => {
       if (!authData.token || !authData.client || !authData.uid) {
         logger.warn("Incomplete auth data, proceeding with logout");
         clearAuthData();
-        forceRedirect();
+        await redirectToHome();
         return;
       }
 
@@ -37,14 +39,8 @@ export const useLogout = () => {
     } finally {
       clearAuthData();
       logger.info("Auth data cleared, redirecting to home");
-      forceRedirect();
+      await redirectToHome();
     }
-  };
-
-  const forceRedirect = () => {
-    // Set a flag in sessionStorage to indicate that we're logging out
-    sessionStorage.setItem("isLoggingOut", "true");
-    window.location.href = "/";
   };
 
   return {
