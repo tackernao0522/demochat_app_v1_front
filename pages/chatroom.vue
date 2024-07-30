@@ -208,7 +208,6 @@ const sendPendingMessages = () => {
 
 const handleLogout = async () => {
     await logout();
-    await redirectToHome();
 }
 
 onMounted(async () => {
