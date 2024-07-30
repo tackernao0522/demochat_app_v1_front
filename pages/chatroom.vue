@@ -45,7 +45,7 @@ const getMessages = async () => {
         logger.debug("Auth Data in getMessages:", authData);
         if (!authData.token || !authData.client || !authData.uid) {
             logger.error("認証情報が不足しています");
-            return;
+            throw new Error("認証情報が不足しています");
         }
         const res = await $axios.get('/messages', {
             headers: {
@@ -64,7 +64,11 @@ const getMessages = async () => {
         logger.debug('Fetched messages:', messages.value);
     } catch (err) {
         logger.error('メッセージ一覧を取得できませんでした', err);
-        alert('メッセージの取得に失敗しました。ページをリロードしてください。');
+        if (!isAuthenticated()) {
+            redirectToLogin();
+        } else {
+            alert('メッセージの取得に失敗しました。ページをリロードしてください。');
+        }
     }
 }
 
@@ -163,7 +167,11 @@ const setupActionCable = () => {
                 logger.error('Connection to RoomChannel was rejected');
                 console.error('WebSocket connection rejected');
                 isConnected.value = false;
-                alert('チャットルームへの接続が拒否されました。ページをリロードしてください。');
+                if (!isAuthenticated()) {
+                    redirectToLogin();
+                } else {
+                    alert('チャットルームへの接続が拒否されました。ページをリロードしてください。');
+                }
             }
         }
     )
@@ -177,7 +185,11 @@ const reconnectWithBackoff = () => {
         setTimeout(setupActionCable, delay);
     } else {
         logger.error('Max reconnection attempts reached. Please refresh the page.');
-        alert('接続が切断されました。ページをリロードしてください。');
+        if (!isAuthenticated()) {
+            redirectToLogin();
+        } else {
+            alert('接続が切断されました。ページをリロードしてください。');
+        }
     }
 }
 

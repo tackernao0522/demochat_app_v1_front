@@ -41,6 +41,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useLogout } from '../composables/useLogout'
 import { useCookiesAuth } from '../composables/useCookiesAuth'
+import { logger } from '../utils/logger'
 
 const props = defineProps({
     username: {
@@ -63,7 +64,7 @@ const displayUserEmail = computed(() => props.userEmail || '未登録')
 
 onMounted(() => {
     const authData = getAuthData()
-    console.log("Navbar Auth Data:", authData) // デバッグ用ログ
+    logger.debug("Navbar Auth Data:", authData)
 })
 
 const toggleMenu = () => {
@@ -76,7 +77,8 @@ const handleLogout = async () => {
         isMenuOpen.value = false // メニューを閉じる
     } catch (err) {
         errorMessage.value = error.value || 'ログアウトに失敗しました'
-        console.error("Logout Error:", err)
+        logger.error("Logout Error:", err)
+        alert(errorMessage.value)
     }
 }
 </script>
