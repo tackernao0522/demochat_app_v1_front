@@ -38,7 +38,7 @@ const pendingMessages = ref([])
 
 const { $axios, $cable } = useNuxtApp()
 const { getAuthData, isAuthenticated } = useCookiesAuth()
-const { redirectToLogin } = useRedirect()
+const { redirectToHome } = useRedirect()
 const { logout } = useLogout()
 
 const getMessages = async () => {
@@ -207,16 +207,9 @@ const sendPendingMessages = () => {
 }
 
 onMounted(async () => {
-    // Check if we're in the process of logging out
-    const isLoggingOut = sessionStorage.getItem('isLoggingOut');
-    if (isLoggingOut === 'true') {
-        sessionStorage.removeItem('isLoggingOut');
-        window.location.href = "/";
-        return;
-    }
-
     if (!await isAuthenticated()) {
-        await logout();
+        logger.warn("User is not authenticated, redirecting to home");
+        await redirectToHome();
         return;
     }
 

@@ -6,7 +6,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   const authenticated = await isAuthenticated();
 
-  if (to.meta.requiresAuth && !authenticated) {
+  if (to.path === "/chatroom" && !authenticated) {
     return navigateTo("/");
   }
 
