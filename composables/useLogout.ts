@@ -1,12 +1,13 @@
 import { ref } from "vue";
-import { useNuxtApp, useRouter } from "#app";
+import { useNuxtApp } from "#app";
 import { useCookiesAuth } from "./useCookiesAuth";
+import { useRedirect } from "./useRedirect";
 import { logger } from "~/utils/logger";
 
 export const useLogout = () => {
   const { $axios } = useNuxtApp();
-  const router = useRouter();
   const { getAuthData, clearAuthData } = useCookiesAuth();
+  const { redirectToLogin } = useRedirect();
   const error = ref(null);
 
   const logout = async () => {
@@ -25,7 +26,7 @@ export const useLogout = () => {
       if (response.status === 200) {
         clearAuthData();
         logger.info("Logout successful, cookies cleared");
-        router.push("/");
+        await redirectToLogin();
       }
     } catch (err) {
       error.value = err.response ? err.response.data : err.message;
