@@ -42,6 +42,8 @@ export const useLogout = () => {
   };
 
   const forceRedirect = () => {
+    // Set a flag in sessionStorage to indicate that we're logging out
+    sessionStorage.setItem("isLoggingOut", "true");
     window.location.href = "/";
   };
 
