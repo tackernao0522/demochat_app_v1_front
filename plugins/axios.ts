@@ -2,8 +2,8 @@ import axios from "axios";
 import { defineNuxtPlugin, useRuntimeConfig } from "#app";
 import { useCookiesAuth } from "../composables/useCookiesAuth";
 
-export default defineNuxtPlugin(() => {
-  const { saveAuthData, getAuthData } = useCookiesAuth();
+export default defineNuxtPlugin((nuxtApp) => {
+  const { saveAuthData, getAuthData, clearAuthData } = useCookiesAuth();
   const config = useRuntimeConfig();
 
   const api = axios.create({
@@ -46,8 +46,10 @@ export default defineNuxtPlugin(() => {
       return response;
     },
     (error) => {
-      console.error("Axios error:", error);
-      // エラーメッセージをユーザーに表示するロジックを追加する場合はここに実装
+      if (error.response && error.response.status === 401) {
+        clearAuthData();
+        window.location.href = "/";
+      }
       return Promise.reject(error);
     }
   );
