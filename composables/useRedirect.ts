@@ -1,31 +1,28 @@
 import { useRouter } from "#app";
-import { logger } from "~/utils/logger";
 
 export const useRedirect = () => {
   const router = useRouter();
 
   const redirectToChatroom = async () => {
-    logger.info("Redirecting to chatroom");
+    console.log("Redirecting to chatroom");
     try {
       await router.push("/chatroom");
     } catch (error) {
-      logger.error("Error redirecting to chatroom:", error);
-      window.location.href = "/chatroom";
+      console.error("Error redirecting to chatroom:", error);
     }
   };
 
-  const redirectToHome = async () => {
-    logger.info("Redirecting to home page");
+  const redirectToLogin = async () => {
+    console.log("Redirecting to login");
     try {
       await router.push("/");
     } catch (error) {
-      logger.error("Error redirecting to home page:", error);
-      window.location.href = "/";
+      console.error("Error redirecting to login:", error);
     }
   };
 
   return {
     redirectToChatroom,
-    redirectToHome,
+    redirectToLogin,
   };
 };
