@@ -1,11 +1,12 @@
 import { ref } from "vue";
-import { useNuxtApp } from "#app";
+import { useNuxtApp, useRouter } from "#app";
 import { useCookiesAuth } from "./useCookiesAuth";
 import { useRedirect } from "./useRedirect";
 import { logger } from "~/utils/logger";
 
 export const useLogout = () => {
   const { $axios } = useNuxtApp();
+  const router = useRouter();
   const { getAuthData, clearAuthData } = useCookiesAuth();
   const { redirectToHome } = useRedirect();
   const error = ref(null);
@@ -20,7 +21,7 @@ export const useLogout = () => {
       if (!authData.token || !authData.client || !authData.uid) {
         logger.warn("Incomplete auth data, proceeding with logout");
         clearAuthData();
-        await redirectToHome();
+        await forceRedirect();
         return;
       }
 
@@ -34,18 +35,23 @@ export const useLogout = () => {
 
       logger.debug("Logout API response:", response);
 
-      if (response.status === 200) {
-        clearAuthData();
-        logger.info("Logout successful, cookies cleared");
-        await redirectToHome();
-      } else {
-        throw new Error("Unexpected response status: " + response.status);
-      }
+      clearAuthData();
+      logger.info("Logout successful, cookies cleared");
+      await forceRedirect();
     } catch (err) {
       logger.error("Logout error:", err);
       error.value = err.response ? err.response.data : err.message;
       clearAuthData();
-      await redirectToHome();
+      await forceRedirect();
+    }
+  };
+
+  const forceRedirect = async () => {
+    try {
+      await router.push("/");
+    } catch (error) {
+      logger.error("Error during router push:", error);
+      window.location.href = "/";
     }
   };
 

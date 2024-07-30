@@ -13,6 +13,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useNuxtApp } from '#app'
+import { onBeforeRouteLeave, useRouter } from 'vue-router'
 import Navbar from '../components/Navbar.vue'
 import ChatWindow from '../components/ChatWindow.vue'
 import NewChatForm from '../components/NewChatForm.vue'
@@ -36,6 +37,7 @@ const maxReconnectAttempts = 5
 const pendingMessages = ref([])
 
 const { $axios, $cable } = useNuxtApp()
+const router = useRouter()
 const { getAuthData, isAuthenticated } = useCookiesAuth()
 const { redirectToLogin } = useRedirect()
 
@@ -234,6 +236,15 @@ watch(isConnected, (newValue) => {
     } else {
         logger.warn('WebSocket disconnected');
         console.log('WebSocket disconnected');
+    }
+});
+
+onBeforeRouteLeave((to, from, next) => {
+    if (to.path === '/') {
+        // ホームページへの遷移時にページをリロード
+        window.location.href = '/';
+    } else {
+        next();
     }
 });
 </script>
