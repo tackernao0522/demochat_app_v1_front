@@ -64,13 +64,10 @@ const getMessages = async () => {
         logger.debug('Fetched messages:', messages.value);
     } catch (err) {
         logger.error('メッセージ一覧を取得できませんでした', err);
-        if (!isAuthenticated()) {
-            redirectToLogin();
-        } else {
-            alert('メッセージの取得に失敗しました。ページをリロードしてください。');
-        }
+        alert('メッセージの取得に失敗しました。ログインページにリダイレクトします。');
+        window.location.replace("/");
     }
-}
+};
 
 const sendMessage = async (message) => {
     const authData = getAuthData();
