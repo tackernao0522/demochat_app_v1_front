@@ -12,7 +12,7 @@ const getLogLevel = (): LogLevel => {
   if (envLogLevel && logLevels.hasOwnProperty(envLogLevel)) {
     return envLogLevel;
   }
-  return process.env.NODE_ENV === "production" ? "error" : "debug";
+  return process.env.NODE_ENV === "production" ? "info" : "debug";
 };
 
 const currentLogLevel = getLogLevel();
