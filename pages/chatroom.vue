@@ -17,7 +17,6 @@ import Navbar from '../components/Navbar.vue'
 import ChatWindow from '../components/ChatWindow.vue'
 import NewChatForm from '../components/NewChatForm.vue'
 import { useCookiesAuth } from '../composables/useCookiesAuth'
-import { useRedirect } from '../composables/useRedirect'
 import { useLogout } from '../composables/useLogout'
 import { logger } from '../utils/logger'
 
@@ -38,7 +37,6 @@ const pendingMessages = ref([])
 
 const { $axios, $cable } = useNuxtApp()
 const { getAuthData, isAuthenticated } = useCookiesAuth()
-const { redirectToHome } = useRedirect()
 const { logout } = useLogout()
 
 const getMessages = async () => {
@@ -208,12 +206,13 @@ const sendPendingMessages = () => {
 
 const handleLogout = async () => {
     await logout();
+    window.location.href = '/';
 }
 
 onMounted(async () => {
     if (!await isAuthenticated()) {
         logger.warn("User is not authenticated, redirecting to home");
-        await redirectToHome();
+        window.location.href = '/';
         return;
     }
 
@@ -223,7 +222,7 @@ onMounted(async () => {
         userEmail.value = authData.user.email || '';
     } else {
         logger.error('User data is missing');
-        await handleLogout();
+        window.location.href = '/';
         return;
     }
 
