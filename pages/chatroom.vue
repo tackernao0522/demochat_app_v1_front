@@ -17,7 +17,7 @@ import Navbar from '../components/Navbar.vue'
 import ChatWindow from '../components/ChatWindow.vue'
 import NewChatForm from '../components/NewChatForm.vue'
 import { useCookiesAuth } from '../composables/useCookiesAuth'
-import { useLogout } from '../composables/useLogout'
+import { useRedirect } from '../composables/useRedirect'
 import { logger } from '../utils/logger'
 
 if (typeof definePageMeta !== 'undefined') {
@@ -37,7 +37,7 @@ const pendingMessages = ref([])
 
 const { $axios, $cable } = useNuxtApp()
 const { getAuthData, isAuthenticated } = useCookiesAuth()
-const { logout } = useLogout()
+const { redirectToLogin } = useRedirect()
 
 const getMessages = async () => {
     try {
@@ -45,7 +45,6 @@ const getMessages = async () => {
         logger.debug("Auth Data in getMessages:", authData);
         if (!authData.token || !authData.client || !authData.uid) {
             logger.error("認証情報が不足しています");
-            await handleLogout();
             return;
         }
         const res = await $axios.get('/messages', {
@@ -65,7 +64,7 @@ const getMessages = async () => {
         logger.debug('Fetched messages:', messages.value);
     } catch (err) {
         logger.error('メッセージ一覧を取得できませんでした', err);
-        await handleLogout();
+        alert('メッセージの取得に失敗しました。ページをリロードしてください。');
     }
 }
 
@@ -75,7 +74,6 @@ const sendMessage = async (message) => {
     if (!user || !user.email) {
         logger.error('User data is missing');
         console.error('User data is missing');
-        await handleLogout();
         return;
     }
 
@@ -165,7 +163,7 @@ const setupActionCable = () => {
                 logger.error('Connection to RoomChannel was rejected');
                 console.error('WebSocket connection rejected');
                 isConnected.value = false;
-                handleLogout();
+                alert('チャットルームへの接続が拒否されました。ページをリロードしてください。');
             }
         }
     )
@@ -179,7 +177,7 @@ const reconnectWithBackoff = () => {
         setTimeout(setupActionCable, delay);
     } else {
         logger.error('Max reconnection attempts reached. Please refresh the page.');
-        handleLogout();
+        alert('接続が切断されました。ページをリロードしてください。');
     }
 }
 
@@ -204,15 +202,9 @@ const sendPendingMessages = () => {
     }
 }
 
-const handleLogout = async () => {
-    await logout();
-    window.location.href = '/';
-}
-
 onMounted(async () => {
     if (!await isAuthenticated()) {
-        logger.warn("User is not authenticated, redirecting to home");
-        window.location.href = '/';
+        redirectToLogin();
         return;
     }
 
@@ -222,7 +214,7 @@ onMounted(async () => {
         userEmail.value = authData.user.email || '';
     } else {
         logger.error('User data is missing');
-        window.location.href = '/';
+        redirectToLogin();
         return;
     }
 
