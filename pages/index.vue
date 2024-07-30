@@ -67,6 +67,10 @@ const closeModal = computed(() => () => {
 
 onMounted(async () => {
   logger.info("Home page mounted")
+
+  // Remove the logout flag if it exists
+  sessionStorage.removeItem('isLoggingOut');
+
   if (await isAuthenticated()) {
     logger.info("User is authenticated, redirecting to chatroom")
     redirectToChatroom()

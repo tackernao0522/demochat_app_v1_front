@@ -207,6 +207,14 @@ const sendPendingMessages = () => {
 }
 
 onMounted(async () => {
+    // Check if we're in the process of logging out
+    const isLoggingOut = sessionStorage.getItem('isLoggingOut');
+    if (isLoggingOut === 'true') {
+        sessionStorage.removeItem('isLoggingOut');
+        window.location.href = "/";
+        return;
+    }
+
     if (!await isAuthenticated()) {
         await logout();
         return;
