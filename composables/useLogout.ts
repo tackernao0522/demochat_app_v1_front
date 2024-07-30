@@ -13,21 +13,18 @@ export const useLogout = () => {
     try {
       const authData = getAuthData();
       logger.debug("Logging out with authData:", authData);
-      const response = await $axios.delete("/auth/sign_out", {
+      await $axios.delete("/auth/sign_out", {
         headers: {
           "access-token": authData.token,
           client: authData.client,
           uid: authData.uid,
         },
       });
-
-      if (response.status === 200) {
-        await performClientSideLogout();
-      }
     } catch (err) {
       error.value = err.response ? err.response.data : err.message;
       logger.error("Logout error:", error.value);
-      // エラーが発生した場合でも、クライアントサイドのログアウトを実行
+    } finally {
+      // エラーの有無にかかわらず、必ずクライアントサイドのログアウト処理を実行
       await performClientSideLogout();
     }
   };
@@ -48,10 +45,10 @@ export const useLogout = () => {
     logger.debug("Local and session storage cleared");
 
     // 少し遅延を入れてからリダイレクト
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     // ページをリロードしてから、ログインページにリダイレクト
-    window.location.href = "/";
+    window.location.replace("/");
   };
 
   return {

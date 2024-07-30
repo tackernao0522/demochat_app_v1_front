@@ -25,17 +25,17 @@ export const logger = {
   },
   info: (...args: any[]) => {
     if (logLevels[currentLogLevel] <= logLevels.info) {
-      console.info("[INFO]", ...args);
+      console.log("[INFO]", ...args);
     }
   },
   warn: (...args: any[]) => {
     if (logLevels[currentLogLevel] <= logLevels.warn) {
-      console.warn("[WARN]", ...args);
+      console.log("[WARN]", ...args);
     }
   },
   error: (...args: any[]) => {
     if (logLevels[currentLogLevel] <= logLevels.error) {
-      console.error("[ERROR]", ...args);
+      console.log("[ERROR]", ...args);
     }
   },
 };
