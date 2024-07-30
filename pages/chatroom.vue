@@ -36,7 +36,7 @@ const maxReconnectAttempts = 5
 const pendingMessages = ref([])
 
 const { $axios, $cable } = useNuxtApp()
-const { getAuthData, isAuthenticated, clearAuthData } = useCookiesAuth()
+const { getAuthData, isAuthenticated } = useCookiesAuth()
 const { redirectToLogin } = useRedirect()
 
 const getMessages = async () => {
@@ -44,7 +44,8 @@ const getMessages = async () => {
         const authData = getAuthData();
         logger.debug("Auth Data in getMessages:", authData);
         if (!authData.token || !authData.client || !authData.uid) {
-            throw new Error("認証情報が不足しています");
+            logger.error("認証情報が不足しています");
+            return;
         }
         const res = await $axios.get('/messages', {
             headers: {
@@ -63,13 +64,7 @@ const getMessages = async () => {
         logger.debug('Fetched messages:', messages.value);
     } catch (err) {
         logger.error('メッセージ一覧を取得できませんでした', err);
-        if (err.response && err.response.status === 401) {
-            alert('認証が失敗しました。再度ログインしてください。');
-            clearAuthData();
-            redirectToLogin();
-        } else {
-            alert('メッセージの取得に失敗しました。ページをリロードしてください。');
-        }
+        alert('メッセージの取得に失敗しました。ページをリロードしてください。');
     }
 }
 
@@ -160,6 +155,7 @@ const setupActionCable = () => {
                 } else if (data.type === 'like_created' || data.type === 'like_deleted') {
                     updateMessages(newMessage);
                 } else {
+                    // 新しいメッセージやいいねの更新でない場合も、メッセージとして扱う
                     updateMessages(newMessage);
                 }
             },
@@ -167,11 +163,7 @@ const setupActionCable = () => {
                 logger.error('Connection to RoomChannel was rejected');
                 console.error('WebSocket connection rejected');
                 isConnected.value = false;
-                if (!isAuthenticated()) {
-                    redirectToLogin();
-                } else {
-                    alert('チャットルームへの接続が拒否されました。ページをリロードしてください。');
-                }
+                alert('チャットルームへの接続が拒否されました。ページをリロードしてください。');
             }
         }
     )
@@ -185,11 +177,7 @@ const reconnectWithBackoff = () => {
         setTimeout(setupActionCable, delay);
     } else {
         logger.error('Max reconnection attempts reached. Please refresh the page.');
-        if (!isAuthenticated()) {
-            redirectToLogin();
-        } else {
-            alert('接続が切断されました。ページをリロードしてください。');
-        }
+        alert('接続が切断されました。ページをリロードしてください。');
     }
 }
 
