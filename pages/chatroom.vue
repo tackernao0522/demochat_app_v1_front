@@ -47,7 +47,7 @@ const getMessages = async () => {
         logger.debug("Auth Data in getMessages:", authData);
         if (!authData.token || !authData.client || !authData.uid) {
             logger.error("認証情報が不足しています");
-            await logout();
+            await handleLogout();
             return;
         }
         const res = await $axios.get('/messages', {
@@ -67,7 +67,7 @@ const getMessages = async () => {
         logger.debug('Fetched messages:', messages.value);
     } catch (err) {
         logger.error('メッセージ一覧を取得できませんでした', err);
-        await logout();
+        await handleLogout();
     }
 }
 
@@ -77,7 +77,7 @@ const sendMessage = async (message) => {
     if (!user || !user.email) {
         logger.error('User data is missing');
         console.error('User data is missing');
-        await logout();
+        await handleLogout();
         return;
     }
 
@@ -167,7 +167,7 @@ const setupActionCable = () => {
                 logger.error('Connection to RoomChannel was rejected');
                 console.error('WebSocket connection rejected');
                 isConnected.value = false;
-                logout();
+                handleLogout();
             }
         }
     )
@@ -181,7 +181,7 @@ const reconnectWithBackoff = () => {
         setTimeout(setupActionCable, delay);
     } else {
         logger.error('Max reconnection attempts reached. Please refresh the page.');
-        logout();
+        handleLogout();
     }
 }
 
@@ -206,6 +206,11 @@ const sendPendingMessages = () => {
     }
 }
 
+const handleLogout = async () => {
+    await logout();
+    await redirectToHome();
+}
+
 onMounted(async () => {
     if (!await isAuthenticated()) {
         logger.warn("User is not authenticated, redirecting to home");
@@ -219,7 +224,7 @@ onMounted(async () => {
         userEmail.value = authData.user.email || '';
     } else {
         logger.error('User data is missing');
-        await logout();
+        await handleLogout();
         return;
     }
 
