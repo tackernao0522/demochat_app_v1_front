@@ -24,7 +24,6 @@ export const useLogout = () => {
       error.value = err.response ? err.response.data : err.message;
       logger.error("Logout error:", error.value);
     } finally {
-      // エラーの有無にかかわらず、必ずクライアントサイドのログアウト処理を実行
       await performClientSideLogout();
     }
   };
@@ -33,22 +32,18 @@ export const useLogout = () => {
     clearAuthData();
     logger.info("Auth data cleared");
 
-    // WebSocket接続を切断
     if (window.$nuxt && window.$nuxt.$cable) {
       window.$nuxt.$cable.disconnect();
       logger.debug("WebSocket disconnected");
     }
 
-    // ローカルストレージとセッションストレージをクリア
     localStorage.clear();
     sessionStorage.clear();
     logger.debug("Local and session storage cleared");
 
-    // 少し遅延を入れてからリダイレクト
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // ページをリロードしてから、ログインページにリダイレクト
-    window.location.replace("/");
+    window.location.href = "/";
   };
 
   return {

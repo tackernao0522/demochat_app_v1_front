@@ -74,14 +74,11 @@ const toggleMenu = () => {
 const handleLogout = async () => {
     try {
         await logout();
-        isMenuOpen.value = false; // メニューを閉じる
+        isMenuOpen.value = false;
     } catch (err) {
         errorMessage.value = error.value || 'ログアウトに失敗しました';
         logger.error("Logout Error:", err);
         alert(errorMessage.value);
-    } finally {
-        // エラーの有無にかかわらず、強制的にリダイレクト
-        window.location.replace("/");
     }
-};
+}
 </script>

@@ -36,7 +36,7 @@ const maxReconnectAttempts = 5
 const pendingMessages = ref([])
 
 const { $axios, $cable } = useNuxtApp()
-const { getAuthData, isAuthenticated } = useCookiesAuth()
+const { getAuthData, isAuthenticated, clearAuthData } = useCookiesAuth()
 const { redirectToLogin } = useRedirect()
 
 const getMessages = async () => {
@@ -44,7 +44,6 @@ const getMessages = async () => {
         const authData = getAuthData();
         logger.debug("Auth Data in getMessages:", authData);
         if (!authData.token || !authData.client || !authData.uid) {
-            logger.error("認証情報が不足しています");
             throw new Error("認証情報が不足しています");
         }
         const res = await $axios.get('/messages', {
@@ -64,10 +63,15 @@ const getMessages = async () => {
         logger.debug('Fetched messages:', messages.value);
     } catch (err) {
         logger.error('メッセージ一覧を取得できませんでした', err);
-        alert('メッセージの取得に失敗しました。ログインページにリダイレクトします。');
-        window.location.replace("/");
+        if (err.response && err.response.status === 401) {
+            alert('認証が失敗しました。再度ログインしてください。');
+            clearAuthData();
+            redirectToLogin();
+        } else {
+            alert('メッセージの取得に失敗しました。ページをリロードしてください。');
+        }
     }
-};
+}
 
 const sendMessage = async (message) => {
     const authData = getAuthData();
@@ -156,7 +160,6 @@ const setupActionCable = () => {
                 } else if (data.type === 'like_created' || data.type === 'like_deleted') {
                     updateMessages(newMessage);
                 } else {
-                    // 新しいメッセージやいいねの更新でない場合も、メッセージとして扱う
                     updateMessages(newMessage);
                 }
             },
