@@ -1,16 +1,18 @@
-import { defineNuxtRouteMiddleware, useRuntimeConfig } from "#app";
+import {
+  defineNuxtRouteMiddleware,
+  useRuntimeConfig,
+  useRequestEvent,
+} from "#app";
+import { createError } from "h3";
 
 const REALM = "Secure Area";
 const UNAUTHORIZED_MESSAGE = "Unauthorized";
 
-export default defineNuxtRouteMiddleware((to, from) => {
-  const config = useRuntimeConfig();
-
+export const basicAuthMiddleware = (event: any, config: any) => {
   console.log("Global Basic Auth middleware is running");
   console.log("NODE_ENV:", process.env.NODE_ENV);
 
   if (process.server && process.env.NODE_ENV === "production") {
-    const event = useRequestEvent();
     if (!event) {
       console.error("No request event found");
       return;
@@ -20,7 +22,7 @@ export default defineNuxtRouteMiddleware((to, from) => {
 
     if (!auth || !auth.startsWith("Basic ")) {
       setUnauthorizedResponse(event);
-      throw createError({
+      return createError({
         statusCode: 401,
         statusMessage: UNAUTHORIZED_MESSAGE,
       });
@@ -36,7 +38,7 @@ export default defineNuxtRouteMiddleware((to, from) => {
       password !== config.basicAuthPassword
     ) {
       setUnauthorizedResponse(event);
-      throw createError({
+      return createError({
         statusCode: 401,
         statusMessage: UNAUTHORIZED_MESSAGE,
       });
@@ -44,8 +46,14 @@ export default defineNuxtRouteMiddleware((to, from) => {
 
     console.log("Basic Auth successful");
   }
-});
+};
 
 function setUnauthorizedResponse(event: any) {
   event.node.res.setHeader("WWW-Authenticate", `Basic realm="${REALM}"`);
 }
+
+export default defineNuxtRouteMiddleware((to, from) => {
+  const config = useRuntimeConfig();
+  const event = useRequestEvent();
+  return basicAuthMiddleware(event, config);
+});
