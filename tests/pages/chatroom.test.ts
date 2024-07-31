@@ -104,61 +104,61 @@ describe("Chatroom", () => {
     expect(mockRedirectToLogin).toHaveBeenCalled();
   });
 
-  // it("メッセージが正しく取得されること", async () => {
-  //   const mockMessages = [
-  //     {
-  //       id: 1,
-  //       content: "Hello",
-  //       user_id: 1,
-  //       name: "User 1",
-  //       email: "user1@example.com",
-  //       created_at: "2023-01-01T00:00:00Z",
-  //       likes: [],
-  //     },
-  //     {
-  //       id: 2,
-  //       content: "Hi",
-  //       user_id: 2,
-  //       name: "User 2",
-  //       email: "user2@example.com",
-  //       created_at: "2023-01-01T00:00:01Z",
-  //       likes: [],
-  //     },
-  //   ];
-  //   mockAxiosGet.mockResolvedValueOnce({ data: mockMessages });
+  it("メッセージが正しく取得されること", async () => {
+    const mockMessages = [
+      {
+        id: 1,
+        content: "Hello",
+        user_id: 1,
+        name: "User 1",
+        email: "user1@example.com",
+        created_at: "2023-01-01T00:00:00Z",
+        likes: [],
+      },
+      {
+        id: 2,
+        content: "Hi",
+        user_id: 2,
+        name: "User 2",
+        email: "user2@example.com",
+        created_at: "2023-01-01T00:00:01Z",
+        likes: [],
+      },
+    ];
+    mockAxiosGet.mockResolvedValueOnce({ data: mockMessages });
 
-  //   await wrapper.vm.getMessages();
+    await wrapper.vm.getMessages();
 
-  //   expect(mockAxiosGet).toHaveBeenCalledWith("/messages", {
-  //     headers: {
-  //       "access-token": "mock-token",
-  //       client: "mock-client",
-  //       uid: "mock-uid",
-  //     },
-  //   });
-  //   expect(wrapper.vm.messages).toEqual(
-  //     mockMessages.map((message) => ({
-  //       ...message,
-  //       sent_by_current_user: message.user_id === 1,
-  //     }))
-  //   );
-  // });
+    expect(mockAxiosGet).toHaveBeenCalledWith("/messages", {
+      headers: {
+        "access-token": "mock-token",
+        client: "mock-client",
+        uid: "mock-uid",
+      },
+    });
+    expect(wrapper.vm.messages).toEqual(
+      mockMessages.map((message) => ({
+        ...message,
+        sent_by_current_user: message.user_id === 1,
+      }))
+    );
+  });
 
-  // it("新しいメッセージを送信できること", async () => {
-  //   const newMessage = "New message";
+  it("新しいメッセージを送信できること", async () => {
+    const newMessage = "New message";
 
-  //   // WebSocket接続が確立されたことをシミュレート
-  //   wrapper.vm.isConnected = true;
-  //   wrapper.vm.messageChannel = { perform: mockPerform };
+    // WebSocket接続が確立されたことをシミュレート
+    wrapper.vm.isConnected = true;
+    wrapper.vm.messageChannel = { perform: mockPerform };
 
-  //   await wrapper.vm.sendMessage(newMessage);
+    await wrapper.vm.sendMessage(newMessage);
 
-  //   expect(mockPerform).toHaveBeenCalledWith("receive", {
-  //     content: newMessage,
-  //     email: "test@example.com",
-  //     timestamp: expect.any(Number),
-  //   });
-  // });
+    expect(mockPerform).toHaveBeenCalledWith("receive", {
+      content: newMessage,
+      email: "test@example.com",
+      timestamp: expect.any(Number),
+    });
+  });
 
   it("メッセージが更新されること", () => {
     const updatedMessage = {
