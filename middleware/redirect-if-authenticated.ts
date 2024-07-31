@@ -2,7 +2,7 @@ import { defineNuxtRouteMiddleware } from "nuxt/app";
 import { useCookies } from "vue3-cookies";
 import { useRedirect } from "../composables/useRedirect";
 
-export default defineNuxtRouteMiddleware(() => {
+const redirectIfAuthenticated = defineNuxtRouteMiddleware(() => {
   console.log("redirectIfAuthenticatedが呼ばれています!");
 
   if (process.server) {
@@ -21,3 +21,5 @@ export default defineNuxtRouteMiddleware(() => {
     redirectToChatroom();
   }
 });
+
+export default redirectIfAuthenticated;
