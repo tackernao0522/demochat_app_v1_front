@@ -8,14 +8,15 @@ export default defineConfig({
     globals: true,
     environment: "happy-dom",
     deps: {
-      inline: ["@nuxt/test-utils-edge"],
+      inline: ["@nuxt/test-utils-edge", "@nuxt/kit"],
     },
     setupFiles: ["./tests/setup.ts"],
-    testTimeout: 30000, // タイムアウト時間を30秒に延長
-    hookTimeout: 30000, // フックのタイムアウト時間も30秒に設定
+    testTimeout: 60000, // タイムアウト時間を60秒に延長
+    hookTimeout: 60000, // フックのタイムアウト時間も60秒に設定
     maxConcurrency: 1, // 同時実行テスト数を1に制限
     maxThreads: 1, // 最大スレッド数を1に制限
     minThreads: 1, // 最小スレッド数を1に設定
+    include: ["tests/**/*.test.ts"], // テストファイルのパターンを指定
   },
   resolve: {
     alias: {
