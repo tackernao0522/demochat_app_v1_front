@@ -1,183 +1,114 @@
 import { useCookies } from "vue3-cookies";
-import { useRequestHeaders } from "nuxt/app";
 import CryptoJS from "crypto-js";
-import { useRuntimeConfig } from "#app";
-import { logger } from "~/utils/logger"; // 新しく追加したloggerをインポート
+import { logger } from "~/utils/logger";
 
-export const useCookiesAuth = () => {
+export const useCookiesAuth = (runtimeConfig?: any) => {
   const { cookies } = useCookies();
-  const cookieOptions = {
-    path: "/",
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-    domain: process.env.NODE_ENV === "production" ? ".fly.dev" : undefined,
-  };
-  const config = useRuntimeConfig();
-  let encryptionKey = config.public.NUXT_ENV_ENCRYPTION_KEY;
 
-  if (!encryptionKey) {
-    logger.warn(
-      "NUXT_ENV_ENCRYPTION_KEY is not set. Using fallback key for development."
+  const getEncryptionKey = () => {
+    if (
+      runtimeConfig &&
+      runtimeConfig.public &&
+      runtimeConfig.public.NUXT_ENV_ENCRYPTION_KEY
+    ) {
+      return runtimeConfig.public.NUXT_ENV_ENCRYPTION_KEY;
+    }
+    return process.env.NUXT_ENV_ENCRYPTION_KEY || "default_encryption_key";
+  };
+
+  const encryptionKey = getEncryptionKey();
+
+  const encrypt = (value: string): string => {
+    if (!value) return "";
+    return CryptoJS.AES.encrypt(value, encryptionKey).toString();
+  };
+
+  const decrypt = (value: string): string => {
+    if (!value) return "";
+    try {
+      return CryptoJS.AES.decrypt(value, encryptionKey).toString(
+        CryptoJS.enc.Utf8
+      );
+    } catch (error) {
+      logger.error("Decryption failed:", error);
+      return "";
+    }
+  };
+
+  const saveAuthData = (headers: any, userData: any) => {
+    if (typeof window === "undefined") return;
+
+    const cookieOptions = {
+      path: "/",
+      secure: process.env.NODE_ENV !== "development",
+      sameSite: "Lax" as const,
+    };
+
+    cookies.set(
+      "access-token",
+      encrypt(headers["access-token"]),
+      cookieOptions
     );
-    encryptionKey = "development_fallback_key";
-  }
-
-  const encrypt = (text: string): string => {
-    try {
-      return CryptoJS.AES.encrypt(text, encryptionKey).toString();
-    } catch (error) {
-      logger.error("Encryption error:", error);
-      return "";
-    }
+    cookies.set("client", encrypt(headers.client), cookieOptions);
+    cookies.set("uid", encrypt(headers.uid), cookieOptions);
+    cookies.set("expiry", encrypt(headers.expiry.toString()), cookieOptions);
+    cookies.set("user", encrypt(JSON.stringify(userData)), cookieOptions);
   };
 
-  const decrypt = (ciphertext: string): string => {
-    try {
-      const bytes = CryptoJS.AES.decrypt(ciphertext, encryptionKey);
-      return bytes.toString(CryptoJS.enc.Utf8);
-    } catch (error) {
-      logger.error("Decryption error:", error);
-      return "";
-    }
+  const getAuthData = () => {
+    const getDecryptedCookie = (key: string) => decrypt(cookies.get(key) || "");
+
+    return {
+      token: getDecryptedCookie("access-token"),
+      client: getDecryptedCookie("client"),
+      uid: getDecryptedCookie("uid"),
+      expiry: getDecryptedCookie("expiry"),
+      user: safeJsonParse(getDecryptedCookie("user")),
+    };
   };
 
-  const parseUserCookie = (userCookie: string | null): any => {
-    if (!userCookie) return null;
+  const safeJsonParse = (value: string) => {
+    if (!value) return null;
     try {
-      const decryptedUserCookie = decrypt(userCookie);
-      return JSON.parse(decryptedUserCookie);
-    } catch (e) {
-      logger.error("Error parsing user cookie:", e);
+      return JSON.parse(value);
+    } catch (error) {
+      logger.error("JSON parse failed:", error);
       return null;
     }
   };
 
-  const parseCookieHeader = (cookieHeader: string) => {
-    const cookies = {};
-    cookieHeader.split(";").forEach((cookie) => {
-      const parts = cookie.split("=");
-      if (parts.length === 2) {
-        const key = parts[0].trim();
-        const value = parts[1].trim();
-        cookies[key] = decodeURIComponent(value);
-      }
-    });
-    return cookies;
-  };
-
-  const saveAuthData = (headers: any, userData: any) => {
-    logger.debug("Saving auth data to cookies");
-    if (process.server) {
-      logger.debug("Skipping auth data save on server side");
-      return;
-    }
-
-    logger.debug("Headers received:", headers);
-    logger.debug("User data received:", userData);
-    clearAuthData();
-
-    const authDataToSave = {
-      "access-token": headers["access-token"] || "",
-      client: headers["client"] || "",
-      uid: headers["uid"] || "",
-      expiry: headers["expiry"] || "",
-      user: userData ? JSON.stringify(userData) : "",
-    };
-
-    Object.entries(authDataToSave).forEach(([key, value]) => {
-      if (value) {
-        try {
-          const encryptedValue = encrypt(value);
-          cookies.set(key, encryptedValue, cookieOptions);
-          logger.debug(`Set ${key} cookie with encrypted value`);
-        } catch (error) {
-          logger.error(`Error setting ${key} cookie:`, error);
-        }
-      } else {
-        logger.warn(`Empty value for ${key}, cookie not set`);
-      }
-    });
-
-    logger.info("Auth data saved successfully");
-  };
-
-  const getAuthData = () => {
-    logger.debug("Getting auth data from cookies");
-    if (process.server) {
-      const headers = useRequestHeaders(["cookie"]);
-      const cookieHeader = headers.cookie || "";
-      const parsedCookies = parseCookieHeader(cookieHeader);
-
-      const authData = {
-        token: parsedCookies["access-token"]
-          ? decrypt(parsedCookies["access-token"])
-          : null,
-        client: parsedCookies["client"]
-          ? decrypt(parsedCookies["client"])
-          : null,
-        uid: parsedCookies["uid"] ? decrypt(parsedCookies["uid"]) : null,
-        user: parseUserCookie(parsedCookies["user"]),
-        expiry: parsedCookies["expiry"]
-          ? decrypt(parsedCookies["expiry"])
-          : null,
-      };
-
-      logger.debug("Auth data retrieved on server:", authData);
-      return authData;
-    } else {
-      const authData = {
-        token: cookies.get("access-token")
-          ? decrypt(cookies.get("access-token"))
-          : null,
-        client: cookies.get("client") ? decrypt(cookies.get("client")) : null,
-        uid: cookies.get("uid") ? decrypt(cookies.get("uid")) : null,
-        user: parseUserCookie(cookies.get("user")),
-        expiry: cookies.get("expiry") ? decrypt(cookies.get("expiry")) : null,
-      };
-      logger.debug("Auth data retrieved from cookies:", authData);
-      return authData;
-    }
-  };
-
   const clearAuthData = () => {
-    if (process.server) return;
+    if (typeof window === "undefined") return;
 
-    ["access-token", "client", "uid", "user", "expiry"].forEach(
-      (cookieName) => {
-        try {
-          cookies.remove(cookieName);
-          logger.debug(`Removed ${cookieName} cookie`);
-        } catch (error) {
-          logger.error(`Error removing ${cookieName} cookie:`, error);
-        }
-      }
-    );
+    cookies.remove("access-token");
+    cookies.remove("client");
+    cookies.remove("uid");
+    cookies.remove("user");
+    cookies.remove("expiry");
   };
 
   const isAuthenticated = () => {
-    if (process.server) return false;
-    const { token, client, uid } = getAuthData();
-    const authenticated = !!token && !!client && !!uid && !isTokenExpired();
-    logger.debug("Is authenticated:", authenticated);
-    return authenticated;
+    if (typeof window === "undefined") return false;
+
+    const { token, client, uid, expiry } = getAuthData();
+    return !!(token && client && uid && expiry && !isTokenExpired());
   };
 
   const isTokenExpired = () => {
-    if (process.server) return true;
-    const expiry = getAuthData().expiry;
-    if (!expiry) {
-      logger.debug("No expiry found, token considered expired");
-      return true;
-    }
-    const expiryDate = new Date(parseInt(expiry) * 1000);
-    const isExpired = new Date() > expiryDate;
-    logger.debug("Token expiry:", expiryDate, "Is expired:", isExpired);
-    return isExpired;
+    if (typeof window === "undefined") return true;
+
+    const { expiry } = getAuthData();
+    if (!expiry) return true;
+
+    const expiryTimestamp = parseInt(expiry, 10);
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+
+    return currentTimestamp >= expiryTimestamp;
   };
 
   return {
-    getAuthData,
     saveAuthData,
+    getAuthData,
     clearAuthData,
     isAuthenticated,
     isTokenExpired,

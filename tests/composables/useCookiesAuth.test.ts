@@ -1,55 +1,43 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { useCookies } from "vue3-cookies";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import CryptoJS from "crypto-js";
 
-vi.mock("vue3-cookies");
-vi.mock("crypto-js");
+const mockCookies = {
+  get: vi.fn(),
+  set: vi.fn(),
+  remove: vi.fn(),
+};
 
-const mockUseRuntimeConfig = vi.fn(() => ({
-  public: {
-    nodeEnv: "test",
-    NUXT_ENV_ENCRYPTION_KEY: "test_encryption_key",
+vi.mock("vue3-cookies", () => ({
+  useCookies: () => ({ cookies: mockCookies }),
+}));
+
+vi.mock("~/utils/logger", () => ({
+  logger: {
+    error: vi.fn(),
   },
 }));
 
-const mockUseRequestHeaders = vi.fn();
-
-vi.mock("#app", () => ({
-  useRuntimeConfig: mockUseRuntimeConfig,
-}));
-
-vi.mock("nuxt/app", () => ({
-  useRequestHeaders: mockUseRequestHeaders,
-  useRuntimeConfig: mockUseRuntimeConfig,
-}));
-
-const mockLogger = {
-  debug: vi.fn(),
-  info: vi.fn(),
-  warn: vi.fn(),
-  error: vi.fn(),
+const mockRuntimeConfig = {
+  public: {
+    NUXT_ENV_ENCRYPTION_KEY: "test_encryption_key",
+  },
 };
 
-vi.mock("~/utils/logger", () => ({
-  logger: mockLogger,
-}));
-
-const mockUseCookiesAuth = {
-  saveAuthData: vi.fn(),
-  getAuthData: vi.fn(),
-  clearAuthData: vi.fn(),
-  isAuthenticated: vi.fn(),
-  isTokenExpired: vi.fn(),
-};
-
-vi.mock("~/composables/useCookiesAuth", () => ({
-  useCookiesAuth: () => mockUseCookiesAuth,
-}));
+const { useCookiesAuth } = await import("../../composables/useCookiesAuth");
 
 describe("useCookiesAuth", () => {
+  let cookiesAuth: ReturnType<typeof useCookiesAuth>;
+
   beforeEach(() => {
     vi.resetAllMocks();
-    vi.stubGlobal("process", { server: false });
+    cookiesAuth = useCookiesAuth(mockRuntimeConfig);
+    vi.stubGlobal("window", {});
+    vi.stubGlobal("process", { env: { NODE_ENV: "test" } });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   describe("saveAuthData", () => {
@@ -62,105 +50,197 @@ describe("useCookiesAuth", () => {
       };
       const userData = { id: 1, name: "Test User" };
 
-      mockUseCookiesAuth.saveAuthData(headers, userData);
+      cookiesAuth.saveAuthData(headers, userData);
 
-      expect(mockUseCookiesAuth.saveAuthData).toHaveBeenCalledWith(
-        headers,
-        userData
+      expect(mockCookies.set).toHaveBeenCalledTimes(5);
+      expect(mockCookies.set).toHaveBeenCalledWith(
+        "access-token",
+        expect.any(String),
+        expect.any(Object)
       );
+      expect(mockCookies.set).toHaveBeenCalledWith(
+        "client",
+        expect.any(String),
+        expect.any(Object)
+      );
+      expect(mockCookies.set).toHaveBeenCalledWith(
+        "uid",
+        expect.any(String),
+        expect.any(Object)
+      );
+      expect(mockCookies.set).toHaveBeenCalledWith(
+        "expiry",
+        expect.any(String),
+        expect.any(Object)
+      );
+      expect(mockCookies.set).toHaveBeenCalledWith(
+        "user",
+        expect.any(String),
+        expect.any(Object)
+      );
+    });
+
+    it("サーバーサイドでは認証データを保存しないこと", () => {
+      vi.stubGlobal("window", undefined);
+      const headers = {
+        "access-token": "test-token",
+        client: "test-client",
+        uid: "test@example.com",
+        expiry: "12345",
+      };
+      const userData = { id: 1, name: "Test User" };
+
+      cookiesAuth.saveAuthData(headers, userData);
+
+      expect(mockCookies.set).not.toHaveBeenCalled();
     });
   });
 
   describe("getAuthData", () => {
-    it("クライアントサイドで正しく認証データを取得すること", () => {
-      const mockAuthData = {
-        token: "access-token",
-        client: "client",
-        uid: "uid",
+    it("正しく認証データを取得すること", () => {
+      const encryptedToken = CryptoJS.AES.encrypt(
+        "mockToken",
+        mockRuntimeConfig.public.NUXT_ENV_ENCRYPTION_KEY
+      ).toString();
+      const encryptedClient = CryptoJS.AES.encrypt(
+        "mockClient",
+        mockRuntimeConfig.public.NUXT_ENV_ENCRYPTION_KEY
+      ).toString();
+      const encryptedUid = CryptoJS.AES.encrypt(
+        "mockUid",
+        mockRuntimeConfig.public.NUXT_ENV_ENCRYPTION_KEY
+      ).toString();
+      const encryptedUser = CryptoJS.AES.encrypt(
+        JSON.stringify({ id: 1, name: "Test User" }),
+        mockRuntimeConfig.public.NUXT_ENV_ENCRYPTION_KEY
+      ).toString();
+      const encryptedExpiry = CryptoJS.AES.encrypt(
+        "9999999999",
+        mockRuntimeConfig.public.NUXT_ENV_ENCRYPTION_KEY
+      ).toString();
+
+      mockCookies.get.mockImplementation((key) => {
+        const values = {
+          "access-token": encryptedToken,
+          client: encryptedClient,
+          uid: encryptedUid,
+          user: encryptedUser,
+          expiry: encryptedExpiry,
+        };
+        return values[key];
+      });
+
+      const authData = cookiesAuth.getAuthData();
+
+      expect(authData).toEqual({
+        token: "mockToken",
+        client: "mockClient",
+        uid: "mockUid",
         user: { id: 1, name: "Test User" },
-        expiry: "expiry",
-      };
-      mockUseCookiesAuth.getAuthData.mockReturnValue(mockAuthData);
-
-      const authData = mockUseCookiesAuth.getAuthData();
-
-      expect(authData).toEqual(mockAuthData);
-    });
-
-    it("サーバーサイドで正しく認証データを取得すること", () => {
-      vi.stubGlobal("process", { server: true });
-      const mockAuthData = {
-        token: "token",
-        client: "client",
-        uid: "uid",
-        user: { id: 1, name: "Test User" },
-        expiry: "expiry",
-      };
-      mockUseCookiesAuth.getAuthData.mockReturnValue(mockAuthData);
-
-      const authData = mockUseCookiesAuth.getAuthData();
-
-      expect(authData).toEqual(mockAuthData);
+        expiry: "9999999999",
+      });
     });
   });
 
   describe("clearAuthData", () => {
     it("正しく認証データをクリアすること", () => {
-      mockUseCookiesAuth.clearAuthData();
+      cookiesAuth.clearAuthData();
 
-      expect(mockUseCookiesAuth.clearAuthData).toHaveBeenCalled();
+      expect(mockCookies.remove).toHaveBeenCalledTimes(5);
+      expect(mockCookies.remove).toHaveBeenCalledWith("access-token");
+      expect(mockCookies.remove).toHaveBeenCalledWith("client");
+      expect(mockCookies.remove).toHaveBeenCalledWith("uid");
+      expect(mockCookies.remove).toHaveBeenCalledWith("user");
+      expect(mockCookies.remove).toHaveBeenCalledWith("expiry");
+    });
+
+    it("サーバーサイドでは認証データをクリアしないこと", () => {
+      vi.stubGlobal("window", undefined);
+      cookiesAuth.clearAuthData();
+
+      expect(mockCookies.remove).not.toHaveBeenCalled();
     });
   });
 
   describe("isAuthenticated", () => {
     it("認証されている場合にtrueを返すこと", () => {
-      mockUseCookiesAuth.isAuthenticated.mockReturnValue(true);
+      const futureDate = Math.floor(Date.now() / 1000) + 3600; // 1時間後
+      const encryptedToken = CryptoJS.AES.encrypt(
+        "mockToken",
+        mockRuntimeConfig.public.NUXT_ENV_ENCRYPTION_KEY
+      ).toString();
+      const encryptedClient = CryptoJS.AES.encrypt(
+        "mockClient",
+        mockRuntimeConfig.public.NUXT_ENV_ENCRYPTION_KEY
+      ).toString();
+      const encryptedUid = CryptoJS.AES.encrypt(
+        "mockUid",
+        mockRuntimeConfig.public.NUXT_ENV_ENCRYPTION_KEY
+      ).toString();
+      const encryptedExpiry = CryptoJS.AES.encrypt(
+        futureDate.toString(),
+        mockRuntimeConfig.public.NUXT_ENV_ENCRYPTION_KEY
+      ).toString();
 
-      const result = mockUseCookiesAuth.isAuthenticated();
+      mockCookies.get.mockImplementation((key) => {
+        const values = {
+          "access-token": encryptedToken,
+          client: encryptedClient,
+          uid: encryptedUid,
+          expiry: encryptedExpiry,
+        };
+        return values[key];
+      });
 
-      expect(result).toBe(true);
+      expect(cookiesAuth.isAuthenticated()).toBe(true);
     });
 
     it("認証されていない場合にfalseを返すこと", () => {
-      mockUseCookiesAuth.isAuthenticated.mockReturnValue(false);
+      mockCookies.get.mockReturnValue(null);
 
-      expect(mockUseCookiesAuth.isAuthenticated()).toBe(false);
+      expect(cookiesAuth.isAuthenticated()).toBe(false);
     });
 
     it("サーバーサイドではfalseを返すこと", () => {
-      vi.stubGlobal("process", { server: true });
-      mockUseCookiesAuth.isAuthenticated.mockReturnValue(false);
+      vi.stubGlobal("window", undefined);
 
-      expect(mockUseCookiesAuth.isAuthenticated()).toBe(false);
+      expect(cookiesAuth.isAuthenticated()).toBe(false);
     });
   });
 
   describe("isTokenExpired", () => {
     it("トークンが有効期限内の場合にfalseを返すこと", () => {
-      mockUseCookiesAuth.isTokenExpired.mockReturnValue(false);
+      const futureDate = Math.floor(Date.now() / 1000) + 3600; // 1時間後
+      const encryptedExpiry = CryptoJS.AES.encrypt(
+        futureDate.toString(),
+        mockRuntimeConfig.public.NUXT_ENV_ENCRYPTION_KEY
+      ).toString();
+      mockCookies.get.mockReturnValue(encryptedExpiry);
 
-      const result = mockUseCookiesAuth.isTokenExpired();
-
-      expect(result).toBe(false);
+      expect(cookiesAuth.isTokenExpired()).toBe(false);
     });
 
     it("トークンが期限切れの場合にtrueを返すこと", () => {
-      mockUseCookiesAuth.isTokenExpired.mockReturnValue(true);
+      const pastDate = Math.floor(Date.now() / 1000) - 3600; // 1時間前
+      const encryptedExpiry = CryptoJS.AES.encrypt(
+        pastDate.toString(),
+        mockRuntimeConfig.public.NUXT_ENV_ENCRYPTION_KEY
+      ).toString();
+      mockCookies.get.mockReturnValue(encryptedExpiry);
 
-      expect(mockUseCookiesAuth.isTokenExpired()).toBe(true);
+      expect(cookiesAuth.isTokenExpired()).toBe(true);
     });
 
     it("expiryがnullの場合にtrueを返すこと", () => {
-      mockUseCookiesAuth.isTokenExpired.mockReturnValue(true);
+      mockCookies.get.mockReturnValue(null);
 
-      expect(mockUseCookiesAuth.isTokenExpired()).toBe(true);
+      expect(cookiesAuth.isTokenExpired()).toBe(true);
     });
 
     it("サーバーサイドではtrueを返すこと", () => {
-      vi.stubGlobal("process", { server: true });
-      mockUseCookiesAuth.isTokenExpired.mockReturnValue(true);
+      vi.stubGlobal("window", undefined);
 
-      expect(mockUseCookiesAuth.isTokenExpired()).toBe(true);
+      expect(cookiesAuth.isTokenExpired()).toBe(true);
     });
   });
 });
