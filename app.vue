@@ -3,7 +3,39 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
+
+// ズームを防止する関数
+const preventZoom = (e) => {
+  if (e.touches && e.touches.length > 1) {
+    e.preventDefault()
+  }
+}
+
+// PCでのズームを防止する関数
+const preventWheelZoom = (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.deltaY !== 0) {
+    e.preventDefault()
+  }
+}
+
+// キーボードでのズームを防止する関数
+const preventKeyboardZoom = (e) => {
+  if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '=')) {
+    e.preventDefault()
+  }
+}
+
+// ダブルタップによるズームを防止する関数
+let lastTapTime = 0
+const preventDoubleTapZoom = (e) => {
+  const currentTime = new Date().getTime()
+  const tapLength = currentTime - lastTapTime
+  if (tapLength < 500 && tapLength > 0) {
+    e.preventDefault()
+  }
+  lastTapTime = currentTime
+}
 
 onMounted(() => {
   // 既存のviewport metaタグを削除（もしあれば）
@@ -18,39 +50,20 @@ onMounted(() => {
   metaTag.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
   document.head.appendChild(metaTag)
 
-  // ズームを防止する関数
-  const preventZoom = (e) => {
-    if (e.touches.length > 1) {
-      e.preventDefault()
-    }
-  }
-
-  // タッチ操作でのズーム防止
+  // イベントリスナーを追加
   document.addEventListener('touchmove', preventZoom, { passive: false })
   document.addEventListener('touchstart', preventZoom, { passive: false })
+  document.addEventListener('touchend', preventDoubleTapZoom, { passive: false })
+  document.addEventListener('wheel', preventWheelZoom, { passive: false })
+  document.addEventListener('keydown', preventKeyboardZoom)
+})
 
-  // ダブルタップによるズームを防止
-  let lastTapTime = 0
-  document.addEventListener('touchend', (e) => {
-    const currentTime = new Date().getTime()
-    const tapLength = currentTime - lastTapTime
-    if (tapLength < 500 && tapLength > 0) {
-      e.preventDefault()
-    }
-    lastTapTime = currentTime
-  }, { passive: false })
-
-  // PCでのズームを防止
-  document.addEventListener('wheel', (e) => {
-    if (e.ctrlKey) {
-      e.preventDefault()
-    }
-  }, { passive: false })
-
-  document.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '=')) {
-      e.preventDefault()
-    }
-  })
+onUnmounted(() => {
+  // イベントリスナーを削除
+  document.removeEventListener('touchmove', preventZoom)
+  document.removeEventListener('touchstart', preventZoom)
+  document.removeEventListener('touchend', preventDoubleTapZoom)
+  document.removeEventListener('wheel', preventWheelZoom)
+  document.removeEventListener('keydown', preventKeyboardZoom)
 })
 </script>
