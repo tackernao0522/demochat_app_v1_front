@@ -1,5 +1,5 @@
 import { mount, flushPromises } from "@vue/test-utils";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import Chatroom from "../../pages/chatroom.vue";
 import { createTestingPinia } from "@pinia/testing";
 import { createPinia, setActivePinia } from "pinia";
@@ -82,6 +82,9 @@ describe("Chatroom", () => {
         },
       },
     });
+  });
+
+  afterEach(() => {
     vi.clearAllMocks();
   });
 
@@ -89,8 +92,8 @@ describe("Chatroom", () => {
     expect(wrapper.vm).toBeTruthy();
   });
 
-  it("認証されていない場合、ログインページにリダイレクトされること", async () => {
-    mockIsAuthenticated.mockReturnValueOnce(false);
+  it("認証されていない場合、ようこそページにリダイレクトされること", async () => {
+    mockIsAuthenticated.mockResolvedValueOnce(false);
     await mount(Chatroom, {
       global: {
         plugins: [createTestingPinia()],
@@ -101,6 +104,7 @@ describe("Chatroom", () => {
         },
       },
     });
+    await flushPromises();
     expect(mockRedirectToLogin).toHaveBeenCalled();
   });
 
@@ -224,5 +228,71 @@ describe("Chatroom", () => {
       ...newMessage,
       sent_by_current_user: false,
     });
+  });
+
+  it("WebSocket接続が切断された場合、再接続が試みられること", async () => {
+    vi.useFakeTimers();
+    let disconnectedCallback;
+    mockCableSubscriptionsCreate.mockImplementation((channel, callbacks) => {
+      disconnectedCallback = callbacks.disconnected;
+      return {
+        perform: mockPerform,
+        unsubscribe: mockUnsubscribe,
+      };
+    });
+
+    await wrapper.vm.setupActionCable();
+    disconnectedCallback();
+
+    expect(wrapper.vm.isConnected).toBe(false);
+    expect(wrapper.vm.reconnectAttempts).toBe(1);
+
+    vi.advanceTimersByTime(2000);
+    expect(mockCableSubscriptionsCreate).toHaveBeenCalledTimes(3); // 初期接続 + 2回の再接続
+
+    vi.useRealTimers();
+  });
+
+  // 修正: ペンディングメッセージのテストケースを簡略化
+  it("ペンディングメッセージが正しく処理されること", async () => {
+    const pendingMessage = {
+      content: "Pending message",
+      email: "test@example.com",
+      timestamp: Date.now(),
+    };
+    wrapper.vm.pendingMessages = [pendingMessage];
+    wrapper.vm.isConnected = true;
+    wrapper.vm.messageChannel = { perform: mockPerform };
+
+    await wrapper.vm.sendPendingMessages();
+
+    expect(mockPerform).toHaveBeenCalledWith("receive", pendingMessage);
+    expect(wrapper.vm.pendingMessages).toHaveLength(0);
+  });
+
+  it("エラー時にアラートが表示されること", async () => {
+    const mockAlert = vi.spyOn(window, "alert").mockImplementation(() => {});
+    mockAxiosGet.mockRejectedValueOnce(new Error("API Error"));
+
+    await wrapper.vm.getMessages();
+
+    expect(mockAlert).toHaveBeenCalledWith(
+      "メッセージの取得に失敗しました。ページをリロードしてください。"
+    );
+    mockAlert.mockRestore();
+  });
+
+  it("WebSocketの接続状態が変更されたときにログが出力されること", async () => {
+    const loggerInfoSpy = vi.spyOn(console, "log");
+
+    wrapper.vm.isConnected = true;
+    await wrapper.vm.$nextTick();
+    expect(loggerInfoSpy).toHaveBeenCalledWith("WebSocket connected");
+
+    wrapper.vm.isConnected = false;
+    await wrapper.vm.$nextTick();
+    expect(loggerInfoSpy).toHaveBeenCalledWith("WebSocket disconnected");
+
+    loggerInfoSpy.mockRestore();
   });
 });
