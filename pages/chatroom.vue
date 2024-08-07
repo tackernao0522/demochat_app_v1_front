@@ -3,9 +3,13 @@
         <div class="page-container">
             <div class="chat-container">
                 <Navbar :username="username" :userEmail="userEmail" />
-                <ChatWindow :messages="messages" @updateMessages="updateMessages" />
+                <ChatWindow :messages="messages" @updateMessages="updateMessages" @deleteMessage="deleteMessage"
+                    @showToast="showToast" />
                 <NewChatForm @newMessage="sendMessage" :websocketConnected="isConnected" />
             </div>
+        </div>
+        <div v-if="showToastNotification" class="toast-notification">
+            {{ toastMessage }}
         </div>
     </client-only>
 </template>
@@ -35,9 +39,20 @@ const reconnectAttempts = ref(0)
 const maxReconnectAttempts = 5
 const pendingMessages = ref([])
 
+const showToastNotification = ref(false)
+const toastMessage = ref('')
+
 const { $axios, $cable } = useNuxtApp()
 const { getAuthData, isAuthenticated } = useCookiesAuth()
 const { redirectToLogin } = useRedirect()
+
+const showToast = (message) => {
+    toastMessage.value = message;
+    showToastNotification.value = true;
+    setTimeout(() => {
+        showToastNotification.value = false;
+    }, 3000);
+}
 
 const getMessages = async () => {
     try {
@@ -64,7 +79,7 @@ const getMessages = async () => {
         logger.debug('Fetched messages:', messages.value);
     } catch (err) {
         logger.error('メッセージ一覧を取得できませんでした', err);
-        alert('メッセージの取得に失敗しました。ページをリロードしてください。');
+        showToast('メッセージの取得に失敗しました。ページをリロードしてください。');
     }
 }
 
@@ -95,18 +110,46 @@ const sendMessage = async (message) => {
     } catch (error) {
         logger.error('Failed to send message:', error);
         console.error('Failed to send message:', error);
-        alert('メッセージの送信に失敗しました。再度お試しください。');
+        showToast('メッセージの送信に失敗しました。再度お試しください。');
     }
 }
 
-const updateMessages = (updatedMessage) => {
-    const index = messages.value.findIndex(m => m.id === updatedMessage.id);
-    if (index !== -1) {
-        messages.value[index] = { ...messages.value[index], ...updatedMessage };
+const updateMessages = (updatedMessageOrMessages) => {
+    if (Array.isArray(updatedMessageOrMessages)) {
+        messages.value = updatedMessageOrMessages;
     } else {
-        messages.value.push(updatedMessage);
+        const index = messages.value.findIndex(m => m.id === updatedMessageOrMessages.id);
+        if (index !== -1) {
+            messages.value[index] = { ...messages.value[index], ...updatedMessageOrMessages };
+        } else {
+            messages.value.push(updatedMessageOrMessages);
+        }
     }
+    messages.value = messages.value.filter(message => message && message.content);
     console.log('Messages updated:', messages.value);
+};
+
+const deleteMessage = async (messageId) => {
+    try {
+        const authData = getAuthData();
+        await $axios.delete(`/messages/${messageId}`, {
+            headers: {
+                'access-token': authData.token,
+                'client': authData.client,
+                'uid': authData.uid
+            }
+        });
+        messages.value = messages.value.filter(m => m.id !== messageId);
+        logger.debug('Message deleted successfully:', messageId);
+    } catch (error) {
+        logger.error('メッセージの削除に失敗しました:', error);
+        if (error.response && error.response.status === 404) {
+            logger.warn('メッセージが既に削除されている可能性があります。ローカルの状態を更新します。');
+            messages.value = messages.value.filter(m => m.id !== messageId);
+        } else {
+            showToast('メッセージの削除に失敗しました。');
+        }
+    }
 }
 
 let messageChannel;
@@ -150,7 +193,9 @@ const setupActionCable = () => {
                     sent_by_current_user: isSentByCurrentUser
                 }
 
-                if (data.type === 'new_message') {
+                if (data.type === 'delete_message') {
+                    messages.value = messages.value.filter(m => m.id !== data.id);
+                } else if (data.type === 'new_message') {
                     updateMessages(newMessage);
                 } else if (data.type === 'like_created' || data.type === 'like_deleted') {
                     updateMessages(newMessage);
@@ -163,7 +208,7 @@ const setupActionCable = () => {
                 logger.error('Connection to RoomChannel was rejected');
                 console.error('WebSocket connection rejected');
                 isConnected.value = false;
-                alert('チャットルームへの接続が拒否されました。ページをリロードしてください。');
+                showToast('チャットルームへの接続が拒否されました。ページをリロードしてください。');
             }
         }
     )
@@ -177,7 +222,7 @@ const reconnectWithBackoff = () => {
         setTimeout(setupActionCable, delay);
     } else {
         logger.error('Max reconnection attempts reached. Please refresh the page.');
-        alert('接続が切断されました。ページをリロードしてください。');
+        showToast('接続が切断されました。ページをリロードしてください。');
     }
 }
 
