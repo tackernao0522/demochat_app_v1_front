@@ -64,6 +64,7 @@ const chatContainer = ref(null)
 const messageList = ref(null)
 let lastTapTime = 0
 let touchStartTime = 0
+let longPressTimer: number | null = null
 const scrolledToBottom = ref(false)
 const scrollToBottomCalled = ref(0)
 
@@ -166,11 +167,21 @@ const handleDoubleClick = (message) => {
 
 const handleTouchStart = (event, message) => {
     touchStartTime = new Date().getTime();
+    if (message.sent_by_current_user) {
+        longPressTimer = setTimeout(() => {
+            handleLongPress(message);
+        }, 500);
+    }
 }
 
 const handleTouchEnd = (event, message) => {
     const touchEndTime = new Date().getTime();
     const touchDuration = touchEndTime - touchStartTime;
+
+    if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+    }
 
     if (touchDuration < 300) {
         const currentTime = new Date().getTime();
@@ -180,6 +191,11 @@ const handleTouchEnd = (event, message) => {
         }
         lastTapTime = currentTime;
     }
+}
+
+const handleLongPress = (message) => {
+    selectedMessage.value = message;
+    showDeleteModal.value = true;
 }
 
 const handleContextMenu = (event, message) => {
