@@ -1,15 +1,15 @@
 <template>
     <div class="chat-window" ref="chatContainer">
-        <div v-if="props.messages && props.messages.length" class="messages" ref="messageList">
-            <div v-for="message in props.messages" :key="message.id"
-                :class="['message-wrapper', messageClass(message)]">
-                <div class="message-inner" @dblclick="handleDoubleClick(message)"
-                    @touchstart="handleTouchStart($event, message)" @touchend="handleTouchEnd($event, message)">
+        <div v-if="messages && messages.length" class="messages" ref="messageList">
+            <div v-for="message in messages" :key="message.id" :class="['message-wrapper', messageClass(message)]">
+                <div v-if="message.content" class="message-inner" @dblclick="handleDoubleClick(message)"
+                    @touchstart="handleTouchStart($event, message)" @touchend="handleTouchEnd($event, message)"
+                    @contextmenu.prevent="handleContextMenu($event, message)">
                     <div class="message-header">
                         <span class="name">{{ message.name }}</span>
                     </div>
                     <div class="message-content-wrapper">
-                        <span class="message-content">{{ message.content || '(空のメッセージ)' }}</span>
+                        <span class="message-content">{{ message.content }}</span>
                         <div class="like-container group" v-if="message.likes && message.likes.length > 0">
                             <div class="like-button" @click.stop="createLike(message)">
                                 <font-awesome-icon :icon="['fas', 'heart']"
@@ -27,13 +27,24 @@
         </div>
         <div v-else class="text-gray-500">メッセージがありません。</div>
     </div>
+    <!-- 削除確認モーダル -->
+    <div v-if="showDeleteModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="modal-title">メッセージを削除</h2>
+            <p class="modal-message">「{{ truncateMessage(selectedMessage) }}」のメッセージを削除してもよろしいですか？</p>
+            <div class="modal-actions">
+                <button @click="cancelDelete" class="btn-secondary">キャンセル</button>
+                <button @click="confirmDelete" class="btn-danger">削除</button>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, nextTick, onMounted, onUpdated } from 'vue'
 import { useNuxtApp } from '#app'
 import { useCookiesAuth } from '../composables/useCookiesAuth'
-import { formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow, isValid } from 'date-fns'
 import { ja } from 'date-fns/locale'
 
 const props = defineProps({
@@ -44,7 +55,7 @@ const props = defineProps({
     }
 })
 
-const emit = defineEmits(['updateMessages'])
+const emit = defineEmits(['updateMessages', 'deleteMessage', 'showToast'])
 
 const { $axios, $cable } = useNuxtApp()
 const { getAuthData } = useCookiesAuth()
@@ -56,13 +67,22 @@ let touchStartTime = 0
 const scrolledToBottom = ref(false)
 const scrollToBottomCalled = ref(0)
 
+const showDeleteModal = ref(false)
+const selectedMessage = ref(null)
+
+const messages = ref(props.messages)
+
 const messageClass = (message) => {
     const authData = getAuthData();
     return message && authData.user && message.user_id === authData.user.id ? 'sent' : 'received';
 }
 
 const formatDate = (dateString) => {
-    return formatDistanceToNow(new Date(dateString), { addSuffix: true, locale: ja })
+    const date = new Date(dateString);
+    if (!isValid(date)) {
+        return '';
+    }
+    return formatDistanceToNow(date, { addSuffix: true, locale: ja })
 }
 
 const scrollToBottom = () => {
@@ -87,13 +107,32 @@ const getLikeUsers = (message) => {
     return `いいねしたユーザー: ${likeUsers}`;
 }
 
+const showToastNotification = (message) => {
+    emit('showToast', message);
+}
+
 const createLike = async (message) => {
     try {
+        if (!message || !message.id) {
+            console.error('Invalid message object:', message);
+            showToastNotification('メッセージが無効です。');
+            return;
+        }
+
+        // クライアント側でメッセージの存在を確認
+        const messageExists = messages.value.some(m => m.id === message.id);
+        if (!messageExists) {
+            console.error('Message does not exist in the client state');
+            showToastNotification('このメッセージは既に削除されています。');
+            return;
+        }
+
         const authData = getAuthData();
         const res = await $axios.post(`/messages/${message.id}/likes`, {});
 
         if (!res || !res.data) {
             console.error('いいね操作に失敗しました');
+            showToastNotification('いいね操作に失敗しました。');
             return;
         }
 
@@ -108,10 +147,16 @@ const createLike = async (message) => {
             ...message,
             likes: updatedLikes
         };
-        emit('updateMessages', updatedMessage);
-
+        updateMessage(updatedMessage);
     } catch (error) {
         console.error('いいね操作エラー:', error);
+        if (error.response && error.response.status === 404) {
+            console.error('メッセージが見つかりません。削除された可能性があります。');
+            showToastNotification('このメッセージは既に削除されています。');
+            deleteMessage(message.id);
+        } else {
+            showToastNotification('いいね操作に失敗しました。');
+        }
     }
 };
 
@@ -137,6 +182,49 @@ const handleTouchEnd = (event, message) => {
     }
 }
 
+const handleContextMenu = (event, message) => {
+    if (message.sent_by_current_user) {
+        event.preventDefault();
+        selectedMessage.value = message;
+        showDeleteModal.value = true;
+    }
+}
+
+const cancelDelete = () => {
+    showDeleteModal.value = false;
+    selectedMessage.value = null;
+}
+
+const confirmDelete = () => {
+    if (selectedMessage.value) {
+        emit('deleteMessage', selectedMessage.value.id);
+    }
+    showDeleteModal.value = false;
+    selectedMessage.value = null;
+}
+
+const truncateMessage = (message) => {
+    if (!message || !message.content) return '';
+    return message.content.length > 6
+        ? message.content.slice(0, 6) + '...'
+        : message.content;
+}
+
+const updateMessage = (updatedMessage) => {
+    const index = messages.value.findIndex(m => m.id === updatedMessage.id);
+    if (index !== -1) {
+        messages.value[index] = updatedMessage;
+    } else {
+        messages.value.push(updatedMessage);
+    }
+    emit('updateMessages', messages.value);
+}
+
+const deleteMessage = (messageId) => {
+    messages.value = messages.value.filter(m => m.id !== messageId);
+    emit('updateMessages', messages.value);
+}
+
 let roomChannel;
 
 const setupRoomChannel = () => {
@@ -149,27 +237,28 @@ const setupRoomChannel = () => {
         },
         received(data) {
             console.log('Received update:', data);
-            const updatedMessageIndex = props.messages.findIndex(m => m.id === data.id);
-            if (updatedMessageIndex !== -1) {
-                const updatedMessage = {
-                    ...props.messages[updatedMessageIndex],
-                    ...data
-                };
-                emit('updateMessages', updatedMessage);
+            if (data.type === 'delete_message') {
+                deleteMessage(data.id);
+            } else if (data.type === 'new_message') {
+                updateMessage(data);
+            } else if (data.type === 'like_created' || data.type === 'like_deleted') {
+                updateMessage(data);
             }
         }
     });
 };
 
-watch(() => props.messages, (newMessages, oldMessages) => {
+watch(() => props.messages, (newMessages) => {
+    messages.value = newMessages.filter(message => message && message.content);
+}, { deep: true })
+
+watch(messages, () => {
     console.log('Messages updated, scheduling scroll');
-    if (newMessages && (!oldMessages || newMessages.length !== oldMessages.length)) {
-        nextTick(() => {
-            console.log('Next tick, scrolling to bottom');
-            scrollToBottom()
-        })
-    }
-}, { deep: true, immediate: true })
+    nextTick(() => {
+        console.log('Next tick, scrolling to bottom');
+        scrollToBottom()
+    })
+}, { deep: true })
 
 onMounted(() => {
     console.log('Component mounted, scrolling to bottom');
@@ -182,6 +271,5 @@ onUpdated(() => {
     scrollToBottom()
 })
 
-// Expose scrollToBottom, scrolledToBottom, and scrollToBottomCalled for testing
 defineExpose({ scrollToBottom, scrolledToBottom, scrollToBottomCalled })
 </script>

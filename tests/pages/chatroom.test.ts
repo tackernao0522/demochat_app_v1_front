@@ -253,7 +253,6 @@ describe("Chatroom", () => {
     vi.useRealTimers();
   });
 
-  // 修正: ペンディングメッセージのテストケースを簡略化
   it("ペンディングメッセージが正しく処理されること", async () => {
     const pendingMessage = {
       content: "Pending message",
@@ -270,16 +269,15 @@ describe("Chatroom", () => {
     expect(wrapper.vm.pendingMessages).toHaveLength(0);
   });
 
-  it("エラー時にアラートが表示されること", async () => {
-    const mockAlert = vi.spyOn(window, "alert").mockImplementation(() => {});
+  it("エラー時にトーストが表示されること", async () => {
     mockAxiosGet.mockRejectedValueOnce(new Error("API Error"));
 
     await wrapper.vm.getMessages();
 
-    expect(mockAlert).toHaveBeenCalledWith(
+    expect(wrapper.vm.showToastNotification).toBe(true);
+    expect(wrapper.vm.toastMessage).toBe(
       "メッセージの取得に失敗しました。ページをリロードしてください。"
     );
-    mockAlert.mockRestore();
   });
 
   it("WebSocketの接続状態が変更されたときにログが出力されること", async () => {
