@@ -187,6 +187,7 @@ const handleTouchEnd = (event, message) => {
         const currentTime = new Date().getTime();
         const tapLength = currentTime - lastTapTime;
         if (tapLength < 300 && tapLength > 0) {
+            event.preventDefault();
             createLike(message);
         }
         lastTapTime = currentTime;
@@ -194,8 +195,10 @@ const handleTouchEnd = (event, message) => {
 }
 
 const handleLongPress = (message) => {
-    selectedMessage.value = message;
-    showDeleteModal.value = true;
+    if (message.sent_by_current_user) {
+        selectedMessage.value = message;
+        showDeleteModal.value = true;
+    }
 }
 
 const handleContextMenu = (event, message) => {
